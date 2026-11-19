@@ -17,7 +17,7 @@ async function HomeContent() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: profile }, { data: isAdmin }, { data: memberData }, { data: requests }] =
+  const [{ data: profile }, { data: isAdmin }, { data: memberData }, { data: requests }, { data: linkData }] =
     await Promise.all([
       supabase.from("profiles").select("display_name").maybeSingle(),
       supabase.rpc("is_platform_admin"),
@@ -30,10 +30,21 @@ async function HomeContent() {
         .select("kindergarten_name, status, reject_reason")
         .order("created_at", { ascending: false })
         .limit(1),
+      supabase
+        .from("guardian_links")
+        .select("id, relation, dogs(name, breed, birth_date, health_notes), kindergartens(name)")
+        .eq("guardian_id", user?.id ?? "")
+        .eq("status", "active"),
     ]);
 
   const memberships = ((memberData ?? []) as unknown as Membership[]).filter((m) => m.kindergartens);
   const lastRequest = requests?.[0];
+  const myDogs = (linkData ?? []) as unknown as {
+    id: string;
+    relation: string;
+    dogs: { name: string; breed: string | null; birth_date: string | null; health_notes: string | null } | null;
+    kindergartens: { name: string } | null;
+  }[];
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center gap-4 p-6">
@@ -55,13 +66,31 @@ async function HomeContent() {
             {m.role === "teacher" && ` · 권한: ${{ view: "조회만", standard: "출결 + 알림장", full: "전체" }[m.permission] ?? m.permission}`}
             {m.kindergartens!.status === "suspended" && " · 현재 이용 정지 (조회만 가능)"}
           </p>
+          <Link href="/dogs" className={`${primaryButton} mt-3 block text-center`}>강아지</Link>
           {m.role === "director" && (
-            <Link href="/staff" className={`${outlineButton} mt-3 block text-center`}>직원 관리</Link>
+            <Link href="/staff" className={`${outlineButton} mt-2 block text-center`}>직원 관리</Link>
           )}
         </div>
       ))}
 
-      {memberships.length === 0 && !isAdmin && (
+      {myDogs.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">내 강아지</h2>
+          {myDogs.map((l) => (
+            <div key={l.id} className="rounded-xl border border-gray-200 p-4">
+              <p className="text-lg font-medium">{l.dogs?.name}</p>
+              <p className="text-sm text-gray-600">
+                {l.kindergartens?.name} · {l.relation}
+                {l.dogs?.breed && ` · ${l.dogs.breed}`}
+              </p>
+              {l.dogs?.birth_date && <p className="text-sm text-gray-500">생일 {l.dogs.birth_date}</p>}
+              {l.dogs?.health_notes && <p className="mt-2 text-sm text-gray-700">{l.dogs.health_notes}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {memberships.length === 0 && !isAdmin && myDogs.length === 0 && (
         <div className="flex flex-col gap-3 rounded-xl border border-gray-200 p-4">
           {lastRequest?.status === "pending" && (
             <p>

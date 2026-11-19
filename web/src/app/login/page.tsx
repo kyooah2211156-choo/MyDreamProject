@@ -1,10 +1,11 @@
+import { Suspense } from "react";
 import { login, signup } from "./actions";
 
 const input =
   "w-full rounded-lg border border-gray-300 px-3 py-3 text-base focus:border-blue-500 focus:outline-none";
 const button = "w-full rounded-lg px-4 py-3 text-base font-medium";
 
-export default async function LoginPage({
+async function LoginContent({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string; message?: string }>;
@@ -33,5 +34,13 @@ export default async function LoginPage({
         <button className={`${button} border border-gray-300`}>가입하기</button>
       </form>
     </main>
+  );
+}
+
+export default function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; message?: string }> }) {
+  return (
+    <Suspense fallback={<p className="p-6 text-gray-500">불러오는 중…</p>}>
+      <LoginContent searchParams={searchParams} />
+    </Suspense>
   );
 }

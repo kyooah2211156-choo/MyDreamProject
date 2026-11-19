@@ -7,6 +7,7 @@ import { outlineButton, primaryButton } from "@/lib/ui";
 type Membership = {
   role: "director" | "teacher";
   status: string;
+  permission: string;
   kindergartens: { name: string; status: string } | null;
 };
 
@@ -22,7 +23,7 @@ async function HomeContent() {
       supabase.rpc("is_platform_admin"),
       supabase
         .from("staff_memberships")
-        .select("role, status, kindergartens(name, status)")
+        .select("role, status, permission, kindergartens(name, status)")
         .eq("status", "active"),
       supabase
         .from("signup_requests")
@@ -51,8 +52,12 @@ async function HomeContent() {
           <p className="text-lg font-medium">{m.kindergartens!.name}</p>
           <p className="text-sm text-gray-600">
             {m.role === "director" ? "원장" : "선생님"}
+            {m.role === "teacher" && ` · 권한: ${{ view: "조회만", standard: "출결 + 알림장", full: "전체" }[m.permission] ?? m.permission}`}
             {m.kindergartens!.status === "suspended" && " · 현재 이용 정지 (조회만 가능)"}
           </p>
+          {m.role === "director" && (
+            <Link href="/staff" className={`${outlineButton} mt-3 block text-center`}>직원 관리</Link>
+          )}
         </div>
       ))}
 

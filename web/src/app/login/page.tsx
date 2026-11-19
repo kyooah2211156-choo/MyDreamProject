@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { login, signup } from "./actions";
+import { safeNext } from "@/lib/safe-next";
 
 const input =
   "w-full rounded-lg border border-gray-300 px-3 py-3 text-base focus:border-blue-500 focus:outline-none";
@@ -8,9 +9,10 @@ const button = "w-full rounded-lg px-4 py-3 text-base font-medium";
 async function LoginContent({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; message?: string }>;
+  searchParams: Promise<{ error?: string; message?: string; next?: string }>;
 }) {
-  const { error, message } = await searchParams;
+  const { error, message, next } = await searchParams;
+  const nextPath = safeNext(next);
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center gap-8 p-6">
@@ -20,6 +22,7 @@ async function LoginContent({
       {message && <p className="rounded-lg bg-green-50 p-3 text-sm text-green-700">{message}</p>}
 
       <form action={login} className="flex flex-col gap-3">
+        <input type="hidden" name="next" value={nextPath} />
         <h2 className="text-lg font-semibold">로그인</h2>
         <input name="email" type="email" placeholder="이메일" required autoComplete="email" className={input} />
         <input name="password" type="password" placeholder="비밀번호" required autoComplete="current-password" className={input} />
@@ -27,6 +30,7 @@ async function LoginContent({
       </form>
 
       <form action={signup} className="flex flex-col gap-3 border-t border-gray-200 pt-6">
+        <input type="hidden" name="next" value={nextPath} />
         <h2 className="text-lg font-semibold">회원가입</h2>
         <input name="name" type="text" placeholder="이름" required autoComplete="name" className={input} />
         <input name="email" type="email" placeholder="이메일" required autoComplete="email" className={input} />
@@ -37,7 +41,7 @@ async function LoginContent({
   );
 }
 
-export default function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; message?: string }> }) {
+export default function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; message?: string; next?: string }> }) {
   return (
     <Suspense fallback={<p className="p-6 text-gray-500">불러오는 중…</p>}>
       <LoginContent searchParams={searchParams} />

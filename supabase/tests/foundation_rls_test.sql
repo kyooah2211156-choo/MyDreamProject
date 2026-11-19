@@ -47,10 +47,13 @@ begin
   update public.kindergartens set status = 'terminated' where id = kgA;
   get diagnostics n = row_count;
   assert n = 0, '2-b: 선생님이 유치원 상태를 바꿈';
-  update public.staff_memberships set role = 'director'
-    where user_id = '00000000-0000-0000-0000-00000000a002';
-  get diagnostics n = row_count;
-  assert n = 0, '2-c: 선생님이 자기 권한을 올림';
+  -- 3단계부터 역할(role) 열은 아무도 바꿀 수 없다(열 권한 없음).
+  begin
+    update public.staff_memberships set role = 'director'
+      where user_id = '00000000-0000-0000-0000-00000000a002';
+    assert false, '2-c: 선생님이 자기 역할을 올림';
+  exception when insufficient_privilege then null;
+  end;
   reset role;
 
   -- 3. B 원장: B만 보이고, A 직원 정보는 못 바꾼다

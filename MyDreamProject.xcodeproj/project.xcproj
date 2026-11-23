@@ -39,6 +39,7 @@
         "ENABLE_PREVIEWS": "YES",
         "GENERATE_INFOPLIST_FILE": "YES",
         "INFOPLIST_KEY_CFBundleDisplayName": "댕답개 배우개",
+        "INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription": "알림장 사진을 내 사진 앱에 저장하기 위해 필요합니다.",
         "INFOPLIST_KEY_UIApplicationSceneManifest_Generation": "YES",
         "INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents": "YES",
         "INFOPLIST_KEY_UILaunchScreen_Generation": "YES",

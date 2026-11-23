@@ -8,4 +8,5 @@ struct Post: Identifiable, Codable, Hashable {
     var photos: [PostPhoto]
     var taggedPetIDs: [String]
     var date: Date
+    var category: PostCategory = .freeTime   // 프로그램 / 자유시간 / 영상
 }

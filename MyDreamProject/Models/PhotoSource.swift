@@ -9,6 +9,8 @@ enum PhotoSource: Codable, Hashable {
     case data(Data)
     /// 서버에 올라간 사진 주소 (서버 연동 단계에서 사용)
     case remote(URL)
+    /// 기기에 저장된 영상 파일
+    case video(URL)
 }
 
 /// 글 하나에 붙는 사진 한 장

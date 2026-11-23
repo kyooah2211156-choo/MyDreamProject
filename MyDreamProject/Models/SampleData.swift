@@ -4,12 +4,15 @@ import Foundation
 enum SampleData {
     // MARK: 사용자 (역할별 샘플 계정)
 
-    static let owner = User(id: "user-owner", name: "김원장", role: .owner)
-    static let teacher = User(id: "user-teacher", name: "이선생", role: .teacher)
+    static let owner = User(id: "user-owner", name: "김원장", role: .owner, kindergartenID: "kg-sample")
+    static let teacher = User(id: "user-teacher", name: "이선생", role: .teacher, kindergartenID: "kg-sample")
     static let parent = User(id: "user-parent", name: "박보호", role: .parent)
     static let otherParent = User(id: "user-parent2", name: "최보호", role: .parent)
 
-    static let users: [User] = [owner, teacher, parent, otherParent]
+    /// 서비스 운영자 (원장 가입을 승인하는 사람)
+    static let admin = User(id: "user-admin", name: "운영자", role: .admin)
+
+    static let users: [User] = [owner, teacher, parent, otherParent, admin]
 
     // MARK: 반려견 (보호자 박보호: 대기중 1, 승인됨 1, 반려됨 1)
 

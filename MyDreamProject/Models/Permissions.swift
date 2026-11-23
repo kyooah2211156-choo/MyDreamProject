@@ -14,12 +14,18 @@ enum Permissions {
         switch user.role {
         case .owner: true
         case .teacher: post.authorID == user.id
-        case .parent: false
+        case .parent, .admin: false
         }
     }
 
     /// 댓글 작성: 모두 가능
     static func canComment(_ user: User) -> Bool { true }
+
+    /// 선생님 초대 코드 만들기, 직원 퇴사 처리: 원장만
+    static func canManageStaff(_ user: User) -> Bool { user.role == .owner }
+
+    /// 원장 가입 승인/반려: 서비스 운영자만
+    static func canApproveOwners(_ user: User) -> Bool { user.role == .admin }
 
     /// 시간표 일정 추가/수정/삭제: 원장만 (선생님·보호자는 보기만)
     static func canEditSchedule(_ user: User) -> Bool { user.role == .owner }
@@ -32,6 +38,8 @@ enum Permissions {
         switch user.role {
         case .owner, .teacher:
             return true
+        case .admin:
+            return false    // 운영자는 유치원 안의 사진·글을 볼 수 없어요
         case .parent:
             let myPetIDs = Set(pets.filter { $0.ownerID == user.id && $0.isApproved }.map(\.id))
             return !myPetIDs.isDisjoint(with: post.taggedPetIDs)

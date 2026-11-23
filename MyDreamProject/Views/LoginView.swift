@@ -6,6 +6,7 @@ struct LoginView: View {
     @State private var id = ""
     @State private var password = ""
     @State private var showingSignUp = false
+    @State private var infoMessage: String?
 
     var body: some View {
         ScrollView {
@@ -18,7 +19,15 @@ struct LoginView: View {
             .padding(.bottom, AppTheme.Spacing.screen)
         }
         .scrollDismissesKeyboard(.interactively)
-        .sheet(isPresented: $showingSignUp) { ParentSignUpView() }
+        .sheet(isPresented: $showingSignUp) {
+            SignUpView { registeredID, message in
+                // 가입이 끝나면 바로 들어가지 않고, 아이디를 채워 둔 채 로그인하게 합니다.
+                id = registeredID
+                password = ""
+                session.errorMessage = nil
+                infoMessage = message
+            }
+        }
         .background(AppTheme.background.ignoresSafeArea())
     }
 
@@ -60,6 +69,13 @@ struct LoginView: View {
                 .padding(14)
                 .background(AppTheme.track.opacity(0.5), in: RoundedRectangle(cornerRadius: 14))
 
+            if let infoMessage {
+                Text(infoMessage)
+                    .font(AppTheme.Typography.caption)
+                    .foregroundStyle(AppTheme.statusApproved)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
             if let message = session.errorMessage {
                 Text(message)
                     .font(AppTheme.Typography.caption)
@@ -93,13 +109,14 @@ struct LoginView: View {
                 sampleButton("원장", id: "owner")
                 sampleButton("선생님", id: "teacher")
                 sampleButton("보호자", id: "parent")
+                sampleButton("운영자", id: "admin")
             }
             .padding(.horizontal, AppTheme.Spacing.large)
         }
     }
 
     private var signUpLink: some View {
-        Button("보호자 가입하기") { showingSignUp = true }
+        Button("회원가입 (원장 · 선생님 · 보호자)") { showingSignUp = true }
             .font(AppTheme.Typography.headline)
             .foregroundStyle(AppTheme.softButtonText)
             .frame(minHeight: 44)
@@ -114,6 +131,7 @@ struct LoginView: View {
     }
 
     private func submit() {
+        infoMessage = nil
         Task { await session.login(id: id, password: password) }
     }
 }

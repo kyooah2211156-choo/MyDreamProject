@@ -5,12 +5,14 @@ enum Role: String, Codable, CaseIterable, Hashable {
     case owner      // 원장
     case teacher    // 선생님
     case parent     // 보호자
+    case admin      // 서비스 운영자 (원장 가입을 승인)
 
     var displayName: String {
         switch self {
         case .owner: "원장"
         case .teacher: "선생님"
         case .parent: "보호자"
+        case .admin: "운영자"
         }
     }
 }

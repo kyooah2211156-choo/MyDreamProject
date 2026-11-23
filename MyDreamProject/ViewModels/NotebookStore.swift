@@ -50,6 +50,7 @@ final class NotebookStore {
         switch user.role {
         case .owner, .teacher: return approved
         case .parent: return approved.filter { $0.ownerID == user.id }
+        case .admin: return []
         }
     }
 

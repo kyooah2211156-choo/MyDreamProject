@@ -46,13 +46,17 @@ struct AlbumView: View {
         .background(AppTheme.background.ignoresSafeArea())
         .navigationTitle("사진첩")
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
+            ToolbarItem(placement: .topBarTrailing) {
                 if Permissions.canWritePost(user) {
                     Button { isAdding = true } label: {
                         Label("사진 추가", systemImage: "plus")
                     }
                     .frame(minWidth: 44, minHeight: 44)
                 }
+            }
+            // iOS 26부터 이웃한 버튼이 한 덩어리로 묶이므로, 간격을 넣어 따로 보이게 합니다.
+            if #available(iOS 26.0, *) {
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 if !items.isEmpty {

@@ -113,6 +113,10 @@ struct WarningManagementView: View {
         if updated.status == .suspended {
             notifications.send(to: parent.id, title: String(localized: "이용이 중단됐어요"),
                                content: String(localized: "운영규칙 경고가 \(limit)회 쌓여 이용이 중단됐어요. 원장님께 문의해 주세요."))
+        } else if updated.warningCount == limit - 1 {
+            // 앱 안에서 읽을 수 있는 마지막 알림이라, 다음 경고에 이용이 중단된다고 분명히 알려요.
+            notifications.send(to: parent.id, title: String(localized: "마지막 경고예요 (\(updated.warningCount)/\(limit))"),
+                               content: String(localized: "경고가 \(updated.warningCount)회 기록됐어요. 한 번 더 기록되면 이용이 중단돼요."))
         } else {
             notifications.send(to: parent.id, title: String(localized: "운영규칙 경고 \(updated.warningCount)/\(limit)"),
                                content: String(localized: "경고가 \(updated.warningCount)회 기록됐어요. \(limit)회가 되면 이용이 중단돼요."))

@@ -1,8 +1,13 @@
 import SwiftUI
 
-/// 훈련 목록: 카드마다 제목, 난이도, 진행도가 보여요. 누르면 상세 화면으로 갑니다.
+/// 훈련 목록: 반려견을 고르면 그 아이의 진행도가 카드에 보여요. 누르면 상세 화면으로 갑니다.
+/// (원장·선생님은 승인된 반려견 전체, 보호자는 내 반려견만 고를 수 있어요)
 struct TrainingListView: View {
+    @Environment(SessionStore.self) private var session
+    @Environment(NotebookStore.self) private var notebook
+    @Environment(TrainingProgressStore.self) private var progress
     @State private var trainings: [Training]
+    @State private var selectedPetID: String?
 
     init(service: TrainingService = FakeTrainingService()) {
         _trainings = State(initialValue: service.loadTrainings())
@@ -10,25 +15,68 @@ struct TrainingListView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                LazyVStack(spacing: AppTheme.Spacing.medium) {
-                    ForEach(trainings) { training in
-                        NavigationLink {
-                            TrainingDetailView(training: training)
+            if let user = session.currentUser {
+                content(for: user)
+            }
+        }
+    }
+
+    private func content(for user: User) -> some View {
+        let pets = notebook.visiblePets(for: user)
+        let selected = pets.first { $0.id == selectedPetID } ?? pets.first
+        return ScrollView {
+            LazyVStack(spacing: AppTheme.Spacing.medium) {
+                petChips(pets, selected: selected)
+                ForEach(trainings) { training in
+                    NavigationLink {
+                        TrainingDetailView(training: training, petID: selected?.id)
+                    } label: {
+                        card(training, petID: selected?.id)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(AppTheme.Spacing.large)
+        }
+        .background(AppTheme.background.ignoresSafeArea())
+        .navigationTitle("훈련")
+    }
+
+    // MARK: 반려견 고르기
+
+    @ViewBuilder
+    private func petChips(_ pets: [Pet], selected: Pet?) -> some View {
+        if pets.isEmpty {
+            Text("승인된 반려견이 없어요")
+                .font(AppTheme.Typography.caption)
+                .foregroundStyle(AppTheme.subText)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: AppTheme.Spacing.small) {
+                    ForEach(pets) { pet in
+                        let isOn = pet.id == selected?.id
+                        Button {
+                            selectedPetID = pet.id
                         } label: {
-                            card(training)
+                            Text(pet.name)
+                                .font(AppTheme.Typography.headline)
+                                .padding(.horizontal, 16)
+                                .frame(minHeight: 44)
+                                .foregroundStyle(isOn ? AppTheme.buttonText : AppTheme.softButtonText)
+                                .background(isOn ? AnyShapeStyle(AppTheme.button) : AnyShapeStyle(AppTheme.softButton),
+                                            in: Capsule())
                         }
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(AppTheme.Spacing.large)
             }
-            .background(AppTheme.background.ignoresSafeArea())
-            .navigationTitle("훈련")
         }
     }
 
-    private func card(_ training: Training) -> some View {
+    // MARK: 훈련 카드
+
+    private func card(_ training: Training, petID: String?) -> some View {
         HStack(spacing: 14) {
             Image(systemName: training.symbol)
                 .font(.title2)
@@ -46,12 +94,15 @@ struct TrainingListView: View {
                     .font(AppTheme.Typography.caption)
                     .foregroundStyle(AppTheme.subText)
                     .lineLimit(1)
-                HStack(spacing: 8) {
-                    ProgressView(value: training.progress)
-                        .tint(AppTheme.buttonShadow)
-                    Text("\(Int(training.progress * 100))%")
-                        .font(AppTheme.Typography.caption)
-                        .foregroundStyle(AppTheme.subText)
+                if let petID {
+                    let percent = progress.percent(petID: petID, trainingID: training.id)
+                    HStack(spacing: 8) {
+                        ProgressView(value: Double(percent), total: 100)
+                            .tint(AppTheme.buttonShadow)
+                        Text("\(percent)%")
+                            .font(AppTheme.Typography.caption)
+                            .foregroundStyle(AppTheme.subText)
+                    }
                 }
             }
         }
@@ -84,11 +135,17 @@ struct DifficultyBadge: View {
     }
 }
 
-#Preview("라이트") {
+#Preview("선생님") {
     TrainingListView()
+        .environment(SessionStore(currentUser: SampleData.teacher))
+        .environment(NotebookStore())
+        .environment(TrainingProgressStore())
 }
 
-#Preview("다크") {
+#Preview("보호자 (다크)") {
     TrainingListView()
+        .environment(SessionStore(currentUser: SampleData.parent))
+        .environment(NotebookStore())
+        .environment(TrainingProgressStore())
         .preferredColorScheme(.dark)
 }

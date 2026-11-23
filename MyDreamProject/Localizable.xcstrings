@@ -480,6 +480,29 @@
         }
       }
     },
+    "%@의 진행도" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@'s progress"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@の進捗"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiến độ của %@"
+          }
+        }
+      }
+    },
     "%@의 최근 사진" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -914,6 +937,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa có chủ nuôi nào đăng ký"
+          }
+        }
+      }
+    },
+    "간식 없이도 잘 앉아요" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sits well even without treats"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "おやつなしでもじょうずにおすわりできます"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ngồi tốt ngay cả khi không có đồ ăn vặt"
           }
         }
       }
@@ -3520,121 +3566,6 @@
         }
       }
     },
-    "사진" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Photo"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "写真"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ảnh"
-          }
-        }
-      }
-    },
-    "사진 삭제" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete photo"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "写真を削除"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Xóa ảnh"
-          }
-        }
-      }
-    },
-    "사진 저장 권한 안내 문구가 아직 설정되지 않았어요. (프로젝트 설정 필요)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The photo-saving permission message isn't set yet. (Project setting needed)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "写真保存の権限説明文がまだ設定されていません。（プロジェクト設定が必要）"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chưa thiết lập thông báo quyền lưu ảnh. (Cần cài đặt dự án)"
-          }
-        }
-      }
-    },
-    "산만한 곳에서도 연습해요" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Practice in distracting places too"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "気が散る場所でも練習します"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Luyện tập cả ở nơi nhiều xao nhãng"
-          }
-        }
-      }
-    },
-    "살" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "yrs"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "歳"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "tuổi"
-          }
-        }
-      }
-    },
     "사랑에는 책임이 따르고, 배려에서 올바른 반려문화가 시작됩니다." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3704,6 +3635,121 @@
         }
       }
     },
+    "사진 저장 권한 안내 문구가 아직 설정되지 않았어요. (프로젝트 설정 필요)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The photo-saving permission message isn't set yet. (Project setting needed)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写真保存の権限説明文がまだ設定されていません。（プロジェクト設定が必要）"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa thiết lập thông báo quyền lưu ảnh. (Cần cài đặt dự án)"
+          }
+        }
+      }
+    },
+    "사진글을 올릴 권한이 없어요." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to post."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写真投稿を投稿する権限がありません。"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bạn không có quyền đăng bài."
+          }
+        }
+      }
+    },
+    "삭제" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "削除"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa"
+          }
+        }
+      }
+    },
+    "살" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "yrs"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歳"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tuổi"
+          }
+        }
+      }
+    },
+    "사진" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写真"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ảnh"
+          }
+        }
+      }
+    },
     "사진 보기" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3746,6 +3792,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bỏ ảnh"
+          }
+        }
+      }
+    },
+    "사진 삭제" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete photo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写真を削除"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa ảnh"
           }
         }
       }
@@ -3911,29 +3980,6 @@
         }
       }
     },
-    "사진글을 올릴 권한이 없어요." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You don't have permission to post."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "写真投稿を投稿する権限がありません。"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bạn không có quyền đăng bài."
-          }
-        }
-      }
-    },
     "사진첩" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3980,25 +4026,25 @@
         }
       }
     },
-    "삭제" : {
+    "산만한 곳에서도 연습해요" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete"
+            "value" : "Practice in distracting places too"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "削除"
+            "value" : "気が散る場所でも練習します"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Xóa"
+            "value" : "Luyện tập cả ở nơi nhiều xao nhãng"
           }
         }
       }
@@ -4463,6 +4509,29 @@
         }
       }
     },
+    "손" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shake"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お手"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bắt tay"
+          }
+        }
+      }
+    },
     "소수점 둘째 자리까지 고를 수 있어요" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4505,29 +4574,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chữ số thập phân thứ nhất"
-          }
-        }
-      }
-    },
-    "손" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shake"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "お手"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bắt tay"
           }
         }
       }
@@ -4712,6 +4758,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chờ phê duyệt %lld"
+          }
+        }
+      }
+    },
+    "승인된 반려견이 없어요" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No approved dogs"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "承認済みのワンちゃんがいません"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa có chó đã duyệt"
           }
         }
       }
@@ -5034,6 +5103,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa có giáo viên nào đăng ký"
+          }
+        }
+      }
+    },
+    "아직 기록이 없어요" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No records yet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ記録がありません"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa có ghi chép"
           }
         }
       }
@@ -5655,6 +5747,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "VD: Bori"
+          }
+        }
+      }
+    },
+    "예: 손을 올릴 때 아직 망설여요" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. Still hesitates when lifting the paw"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例：前足を上げるときまだためらいます"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VD: Vẫn còn do dự khi đưa chân lên"
           }
         }
       }
@@ -7453,6 +7568,29 @@
         }
       }
     },
+    "진행 기록" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress log"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "進捗の記録"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lịch sử tiến độ"
+          }
+        }
+      }
+    },
     "진행도" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7472,6 +7610,75 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tiến độ"
+          }
+        }
+      }
+    },
+    "진행도 (10% 단위)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress (in 10% steps)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "進捗（10%単位）"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiến độ (bước 10%)"
+          }
+        }
+      }
+    },
+    "진행도 기록" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress record"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "進捗の記録"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ghi chép tiến độ"
+          }
+        }
+      }
+    },
+    "진행도 기록하기" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record progress"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "進捗を記録する"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ghi tiến độ"
           }
         }
       }

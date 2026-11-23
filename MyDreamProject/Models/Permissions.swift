@@ -30,6 +30,9 @@ enum Permissions {
     /// 건강 기록(응가·몸무게·식사량) 입력/수정/삭제: 원장, 선생님 (보호자는 내 반려견 기록 보기만)
     static func canEditHealthRecords(_ user: User) -> Bool { user.role == .owner || user.role == .teacher }
 
+    /// 훈련 진행도 기록: 원장, 선생님 (보호자는 내 반려견 것만 보기)
+    static func canEditTrainingProgress(_ user: User) -> Bool { user.role == .owner || user.role == .teacher }
+
     /// 시간표 일정 추가/수정/삭제: 원장만 (선생님·보호자는 보기만)
     static func canEditSchedule(_ user: User) -> Bool { user.role == .owner }
 

@@ -13,6 +13,8 @@ struct RootView: View {
     @State private var accountStore = AccountStore()
     /// 건강 기록(응가·몸무게·식사량) 데이터
     @State private var healthStore = HealthRecordStore()
+    /// 강아지별 훈련 진행도 데이터
+    @State private var trainingProgressStore = TrainingProgressStore()
 
     var body: some View {
         if let user = session.currentUser {
@@ -23,6 +25,7 @@ struct RootView: View {
                 .environment(scheduleStore)
                 .environment(accountStore)
                 .environment(healthStore)
+                .environment(trainingProgressStore)
         } else {
             LoginView()
                 .environment(notebookStore)

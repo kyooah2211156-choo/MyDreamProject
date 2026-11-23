@@ -101,3 +101,22 @@ struct PetFormState {
         )
     }
 }
+
+extension PetFormState {
+    /// 이미 신청한 반려견의 정보로 입력 칸을 채웁니다. (반려된 신청을 고쳐서 다시 낼 때 사용)
+    init(pet: Pet) {
+        self.init()
+        name = pet.name
+        breed = pet.breed
+        guard let profile = pet.profile else { return }
+        vaccination = profile.vaccination
+        isNeutered = profile.isNeutered
+        allergy = profile.allergy
+        gender = profile.gender
+        birthDate = profile.birthDate
+        ageText = String(profile.ageYears)
+        healthCondition = profile.healthCondition
+        temperament = profile.temperament
+        isAnimalRegistered = profile.isAnimalRegistered
+    }
+}

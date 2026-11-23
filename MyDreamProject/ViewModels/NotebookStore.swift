@@ -92,6 +92,17 @@ final class NotebookStore {
 
     // MARK: 반려견 등록 승인
 
+    /// 반려된 반려견을 고쳐서 다시 신청 ('대기중'으로 돌아가요)
+    func resubmitPet(_ pet: Pet) {
+        guard let current = pets.first(where: { $0.id == pet.id }), current.status == .rejected else { return }
+        var updated = pet
+        updated.status = .pending
+        updated.rejectionReason = nil
+        updated.reviewerID = nil
+        service.update(pet: updated)
+        reload()
+    }
+
     /// 승인을 기다리는 반려견
     var pendingPets: [Pet] { pets.filter { $0.status == .pending } }
 

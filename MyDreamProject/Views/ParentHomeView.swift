@@ -5,7 +5,20 @@ struct ParentHomeView: View {
     @Environment(SessionStore.self) private var session
     @Environment(NotebookStore.self) private var store
     @State private var selectedPetID: String?
-    @State private var showingPolicy = false
+    @State private var sheet: ParentSheet?
+
+    /// 보호자 홈에서 여는 창
+    private enum ParentSheet: Identifiable {
+        case policy
+        case request(PetRequestMode)
+
+        var id: String {
+            switch self {
+            case .policy: "policy"
+            case .request(let mode): "request-\(mode.id)"
+            }
+        }
+    }
 
     private let kindergartenName = UserDefaultsKindergartenNameStore().load() ?? "댕댕이 유치원"
 
@@ -28,7 +41,7 @@ struct ParentHomeView: View {
                 hero(user)
                 VStack(alignment: .leading, spacing: AppTheme.Spacing.large) {
                     Button {
-                        showingPolicy = true
+                        sheet = .policy
                     } label: {
                         Label("운영규칙 · 개인정보 보기", systemImage: "checkmark.shield.fill")
                             .frame(maxWidth: .infinity)
@@ -38,9 +51,18 @@ struct ParentHomeView: View {
                     sectionTitle("내 반려견")
                     if pets.isEmpty {
                         infoCard(icon: "pawprint", title: String(localized: "등록된 반려견이 없어요"),
-                                 message: String(localized: "반려견 등록 신청은 다음 단계에서 만들어요."), color: AppTheme.subText)
+                                 message: String(localized: "아래 버튼으로 반려견 등록을 신청할 수 있어요."), color: AppTheme.subText)
                     } else {
                         petCarousel(pets, selected: selected)
+                    }
+                    if Permissions.canRequestPet(user) {
+                        Button {
+                            sheet = .request(.new)
+                        } label: {
+                            Label("반려견 등록 신청", systemImage: "plus.circle.fill")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(SoftButtonStyle())
                     }
                     if let selected {
                         detail(for: selected, user: user)
@@ -51,7 +73,12 @@ struct ParentHomeView: View {
         }
         .background(AppTheme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $showingPolicy) { PolicySheetView() }
+        .sheet(item: $sheet) { sheet in
+            switch sheet {
+            case .policy: PolicySheetView()
+            case .request(let mode): PetRequestView(mode: mode)
+            }
+        }
     }
 
     // MARK: 머리말
@@ -157,6 +184,8 @@ struct ParentHomeView: View {
             infoCard(icon: "exclamationmark.triangle.fill", title: String(localized: "등록이 반려됐어요"),
                      message: pet.rejectionReason ?? String(localized: "반려 사유가 적혀 있지 않아요."),
                      color: AppTheme.statusRejected)
+            Button("수정해서 다시 신청하기") { sheet = .request(.resubmit(pet)) }
+                .buttonStyle(GradientButtonStyle())
         }
     }
 
@@ -311,6 +340,7 @@ struct PetStatusBadge: View {
         .environment(NotebookStore())
         .environment(AccountStore())
         .environment(HealthRecordStore())
+        .environment(NotificationStore())
 }
 
 #Preview("보호자 (다크)") {
@@ -319,6 +349,7 @@ struct PetStatusBadge: View {
         .environment(NotebookStore())
         .environment(AccountStore())
         .environment(HealthRecordStore())
+        .environment(NotificationStore())
         .preferredColorScheme(.dark)
 }
 
@@ -328,4 +359,5 @@ struct PetStatusBadge: View {
         .environment(NotebookStore())
         .environment(AccountStore())
         .environment(HealthRecordStore())
+        .environment(NotificationStore())
 }

@@ -94,7 +94,7 @@ struct HealthRecordEditorView: View {
                 .disabled(poop == 0)
 
                 Text("\(poop)")
-                    .font(.system(size: 40, weight: .black, design: .rounded))
+                    .font(AppTheme.Typography.counterNumber)
                     .foregroundStyle(AppTheme.text)
                     .frame(minWidth: 60)
 
@@ -127,7 +127,7 @@ struct HealthRecordEditorView: View {
                     .frame(width: 90, height: 110)
                     .clipped()
 
-                    Text(".").font(.title2.bold())
+                    Text(".").font(AppTheme.Typography.title)
 
                     Picker("소수점 첫째 자리", selection: $weightTenth) {
                         ForEach(0...9, id: \.self) { Text("\($0)").tag($0) }

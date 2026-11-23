@@ -57,7 +57,7 @@ struct NotificationListView: View {
                         .font(AppTheme.Typography.body)
                         .foregroundStyle(AppTheme.subText)
                     Text(item.date.formatted(date: .abbreviated, time: .shortened))
-                        .font(.caption2)
+                        .font(AppTheme.Typography.caption2)
                         .foregroundStyle(AppTheme.subText)
                 }
                 Spacer(minLength: 0)

@@ -36,7 +36,7 @@ struct PostCommentsView: View {
                             .font(AppTheme.Typography.body)
                             .foregroundStyle(AppTheme.text)
                         Text(comment.date.formatted(date: .abbreviated, time: .shortened))
-                            .font(.caption2)
+                            .font(AppTheme.Typography.caption2)
                             .foregroundStyle(AppTheme.subText)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)

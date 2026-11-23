@@ -6,6 +6,7 @@ struct LoginView: View {
     @State private var id = ""
     @State private var password = ""
     @State private var showingSignUp = false
+    @State private var showingSettings = false
     @State private var infoMessage: String?
 
     var body: some View {
@@ -31,6 +32,22 @@ struct LoginView: View {
             }
         }
         .background(AppTheme.background.ignoresSafeArea())
+        .overlay(alignment: .topTrailing) {
+            // 로그인 전에도 화면 모드와 글씨 크기를 바꿀 수 있어요.
+            Button {
+                showingSettings = true
+            } label: {
+                Image(systemName: "gearshape.fill")
+                    .font(.title3)
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(.white.opacity(0.22), in: Circle())
+            }
+            .padding(.trailing, AppTheme.Spacing.large)
+            .padding(.top, 4)
+            .accessibilityLabel("설정")
+            .sheet(isPresented: $showingSettings) { SettingsView() }
+        }
     }
 
     private var header: some View {

@@ -71,11 +71,24 @@ enum AppTheme {
     // MARK: 글자 (시스템 둥근 글꼴 사용, 글자 크기 설정을 따라감)
 
     enum Typography {
-        static let largeTitle = Font.system(.largeTitle, design: .rounded).weight(.black)
-        static let title = Font.system(.title2, design: .rounded).weight(.heavy)
-        static let headline = Font.system(.headline, design: .rounded)
-        static let body = Font.system(.body, design: .rounded)
-        static let caption = Font.system(.caption, design: .rounded).weight(.semibold)
+        static var largeTitle: Font { AppFont.font(.largeTitle, weight: .black) }
+        static var title: Font { AppFont.font(.title2, weight: .heavy) }
+        static var headline: Font { AppFont.font(.headline, weight: .semibold) }
+        static var body: Font { AppFont.font(.body, weight: .regular) }
+        static var caption: Font { AppFont.font(.caption, weight: .semibold) }
+
+        static var heroTitle: Font { AppFont.font(.title, weight: .black) }
+        static var title3Heavy: Font { AppFont.font(.title3, weight: .heavy) }
+        static var subheadline: Font { AppFont.font(.subheadline, weight: .regular) }
+        static var subheadlineBold: Font { AppFont.font(.subheadline, weight: .bold) }
+        static var buttonLabel: Font { AppFont.font(.subheadline, weight: .heavy) }
+        static var footnoteBold: Font { AppFont.font(.footnote, weight: .bold) }
+        static var captionRegular: Font { AppFont.font(.caption, weight: .regular) }
+        static var captionBold: Font { AppFont.font(.caption, weight: .bold) }
+        static var caption2: Font { AppFont.font(.caption2, weight: .regular) }
+        static var caption2Bold: Font { AppFont.font(.caption2, weight: .bold) }
+        static var statNumber: Font { AppFont.sized(44, weight: .black, relativeTo: .largeTitle) }
+        static var counterNumber: Font { AppFont.sized(40, weight: .black, relativeTo: .largeTitle) }
     }
 
     // MARK: 간격과 둥글기
@@ -98,11 +111,15 @@ enum AppTheme {
 struct GradientButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.subheadline.weight(.heavy))
+            .font(AppTheme.Typography.buttonLabel)
             .foregroundStyle(AppTheme.buttonText)
             .frame(maxWidth: .infinity, minHeight: 48)
-            .background(AppTheme.button, in: RoundedRectangle(cornerRadius: 16))
-            .shadow(color: AppTheme.buttonShadow, radius: 0, x: 0, y: configuration.isPressed ? 1 : 4)
+            // 입체감을 주는 그림자는 배경 모양에만 붙입니다. (글자와 아이콘에 붙으면 글자가 겹쳐 보여요)
+            .background {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(AppTheme.button)
+                    .shadow(color: AppTheme.buttonShadow, radius: 0, x: 0, y: configuration.isPressed ? 1 : 4)
+            }
             .offset(y: configuration.isPressed ? 3 : 0)
             .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
@@ -112,7 +129,7 @@ struct GradientButtonStyle: ButtonStyle {
 struct SoftButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.subheadline.weight(.heavy))
+            .font(AppTheme.Typography.buttonLabel)
             .foregroundStyle(AppTheme.softButtonText)
             .frame(maxWidth: .infinity, minHeight: 48)
             .background(AppTheme.softButton, in: RoundedRectangle(cornerRadius: 16))

@@ -111,7 +111,7 @@ struct PetHealthLogView: View {
             HStack(spacing: 12) {
                 VStack(spacing: 2) {
                     Text(HealthDayLabel.title(for: day)).font(AppTheme.Typography.headline)
-                    Text(day.formatted(.dateTime.weekday(.abbreviated))).font(.caption2)
+                    Text(day.formatted(.dateTime.weekday(.abbreviated))).font(AppTheme.Typography.caption2)
                 }
                 .foregroundStyle(AppTheme.softButtonText)
                 .frame(width: 64)

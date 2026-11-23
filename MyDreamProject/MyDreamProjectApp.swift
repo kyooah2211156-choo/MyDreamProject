@@ -11,6 +11,8 @@ import SwiftUI
 struct MyDreamProjectApp: App {
     /// 로그인한 사람 정보. 앱 전체 화면이 함께 씁니다.
     @State private var session = SessionStore()
+    /// 화면 모드·글씨 크기 설정. 앱 전체 화면에 적용돼요.
+    @State private var settings = AppSettingsStore()
 
     /// 앱이 지원하는 언어
     private static let supportedLanguages = ["ko", "en", "ja", "vi"]
@@ -26,11 +28,18 @@ struct MyDreamProjectApp: App {
         return Locale(identifier: "en")
     }
 
+    init() {
+        // 앱에 넣은 글꼴 파일을 쓸 수 있게 등록합니다.
+        FontRegistrar.registerAll()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(session)
                 .environment(\.locale, Self.appLocale)
+                .environment(settings)
+                .appSettings(settings.settings)
         }
     }
 }

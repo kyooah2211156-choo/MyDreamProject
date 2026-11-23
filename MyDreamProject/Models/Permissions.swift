@@ -21,6 +21,9 @@ enum Permissions {
     /// 댓글 작성: 모두 가능
     static func canComment(_ user: User) -> Bool { true }
 
+    /// 시간표 일정 추가/수정/삭제: 원장만 (선생님·보호자는 보기만)
+    static func canEditSchedule(_ user: User) -> Bool { user.role == .owner }
+
     /// 반려견 등록 승인/반려: 원장, 선생님
     static func canReviewPets(_ user: User) -> Bool { user.role == .owner || user.role == .teacher }
 

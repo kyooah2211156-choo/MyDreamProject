@@ -7,6 +7,8 @@ struct RootView: View {
     @State private var notebookStore = NotebookStore()
     /// 앱 안 알림 데이터
     @State private var notificationStore = NotificationStore()
+    /// 한 달 시간표 데이터
+    @State private var scheduleStore = ScheduleStore()
 
     var body: some View {
         if let user = session.currentUser {
@@ -14,6 +16,7 @@ struct RootView: View {
                 .id(user.id)
                 .environment(notebookStore)
                 .environment(notificationStore)
+                .environment(scheduleStore)
         } else {
             LoginView()
                 .environment(notebookStore)
@@ -21,12 +24,20 @@ struct RootView: View {
     }
 }
 
+/// 종 버튼, 달력 버튼으로 여는 창 종류
+private enum SignedInSheet: String, Identifiable {
+    case notifications
+    case schedule
+
+    var id: String { rawValue }
+}
+
 /// 로그인 후 화면: 홈 / 훈련 / 알림장 / 사진첩 탭 (원장·선생님은 승인 탭 추가)
 private struct SignedInView: View {
     @Environment(SessionStore.self) private var session
     @Environment(NotebookStore.self) private var store
     @Environment(NotificationStore.self) private var notifications
-    @State private var showingNotifications = false
+    @State private var activeSheet: SignedInSheet?
     let user: User
 
     var body: some View {
@@ -50,7 +61,12 @@ private struct SignedInView: View {
             .tint(AppTheme.softButtonText)
         }
         .background(AppTheme.background.ignoresSafeArea())
-        .sheet(isPresented: $showingNotifications) { NotificationListView() }
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .notifications: NotificationListView()
+            case .schedule: ScheduleView()
+            }
+        }
     }
 
     private var userBar: some View {
@@ -59,6 +75,7 @@ private struct SignedInView: View {
                 .font(AppTheme.Typography.headline)
                 .foregroundStyle(AppTheme.text)
             Spacer()
+            scheduleButton
             notificationButton
             Button("로그아웃") { session.logout() }
                 .font(AppTheme.Typography.caption)
@@ -69,11 +86,23 @@ private struct SignedInView: View {
         .background(AppTheme.card)
     }
 
+    /// 달력 모양 버튼. 한 달 시간표를 엽니다.
+    private var scheduleButton: some View {
+        Button {
+            activeSheet = .schedule
+        } label: {
+            Image(systemName: "calendar")
+                .foregroundStyle(AppTheme.softButtonText)
+                .frame(width: 44, height: 44)
+        }
+        .accessibilityLabel("한 달 시간표")
+    }
+
     /// 종 모양 버튼. 안 읽은 알림 개수가 빨간 배지로 보여요.
     private var notificationButton: some View {
         let unread = notifications.unreadCount(for: user)
         return Button {
-            showingNotifications = true
+            activeSheet = .notifications
         } label: {
             Image(systemName: "bell.fill")
                 .foregroundStyle(AppTheme.softButtonText)

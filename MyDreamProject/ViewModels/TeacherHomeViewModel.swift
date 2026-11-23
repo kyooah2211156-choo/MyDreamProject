@@ -52,6 +52,12 @@ final class TeacherHomeViewModel {
 }
 
 extension TeacherHomeViewModel {
+    /// 실제 앱에서 쓰는 버전 (유치원 이름이 기기에 저장됩니다)
+    static var live: TeacherHomeViewModel {
+        TeacherHomeViewModel(kindergartenName: "댕댕이 유치원", dogs: Dog.samples)
+    }
+
+    /// 미리보기용 (저장하지 않음)
     static var sample: TeacherHomeViewModel {
         TeacherHomeViewModel(kindergartenName: "댕댕이 유치원", dogs: Dog.samples,
                              nameStore: InMemoryKindergartenNameStore())

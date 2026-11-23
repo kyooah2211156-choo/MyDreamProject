@@ -6,8 +6,12 @@ struct TeacherHomeView: View {
     @State private var isEditingName = false
     @State private var nameDraft = ""
 
-    init(viewModel: TeacherHomeViewModel) {
+    /// 유치원 이름 수정 버튼을 보여줄지 (원장만 true)
+    private let canEditKindergartenName: Bool
+
+    init(viewModel: TeacherHomeViewModel, canEditKindergartenName: Bool = true) {
         _viewModel = State(initialValue: viewModel)
+        self.canEditKindergartenName = canEditKindergartenName
     }
 
     var body: some View {
@@ -71,15 +75,17 @@ struct TeacherHomeView: View {
                     Text(viewModel.kindergartenName)
                         .font(.title.weight(.black))
                         .lineLimit(2)
-                    Button {
-                        nameDraft = viewModel.kindergartenName
-                        isEditingName = true
-                    } label: {
-                        Image(systemName: "pencil.circle.fill")
-                            .font(.title3)
-                            .frame(width: 44, height: 44)
+                    if canEditKindergartenName {
+                        Button {
+                            nameDraft = viewModel.kindergartenName
+                            isEditingName = true
+                        } label: {
+                            Image(systemName: "pencil.circle.fill")
+                                .font(.title3)
+                                .frame(width: 44, height: 44)
+                        }
+                        .accessibilityLabel("유치원 이름 수정")
                     }
-                    .accessibilityLabel("유치원 이름 수정")
                 }
                 Text("댕답개 배우개")
                     .font(.caption.weight(.bold))
@@ -219,6 +225,10 @@ struct TeacherHomeView: View {
 
 #Preview("라이트") {
     TeacherHomeView(viewModel: .sample)
+}
+
+#Preview("선생님용 (이름 수정 불가)") {
+    TeacherHomeView(viewModel: .sample, canEditKindergartenName: false)
 }
 
 #Preview("다크") {

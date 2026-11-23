@@ -27,6 +27,7 @@ struct Pet: Identifiable, Codable, Hashable {
     var rejectionReason: String?    // 반려됐을 때만 값이 있음
     var requesterID: String         // 등록을 신청한 사람
     var reviewerID: String?         // 승인/반려를 처리한 사람
+    var profile: PetProfile?        // 가입 때 적은 상세 정보 (예방접종, 성향 등)
 
     var isApproved: Bool { status == .approved }
 }

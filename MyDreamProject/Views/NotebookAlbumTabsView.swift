@@ -18,17 +18,20 @@ struct NotebookAlbumTabsView: View {
     NotebookAlbumTabsView()
         .environment(SessionStore(currentUser: SampleData.owner))
         .environment(NotebookStore())
+        .environment(HealthRecordStore())
 }
 
 #Preview("선생님") {
     NotebookAlbumTabsView()
         .environment(SessionStore(currentUser: SampleData.teacher))
         .environment(NotebookStore())
+        .environment(HealthRecordStore())
 }
 
 #Preview("보호자 (다크)") {
     NotebookAlbumTabsView()
         .environment(SessionStore(currentUser: SampleData.parent))
         .environment(NotebookStore())
+        .environment(HealthRecordStore())
         .preferredColorScheme(.dark)
 }

@@ -129,7 +129,7 @@ private struct PostRow: View {
                     .overlay(alignment: .bottomTrailing) {
                         if post.photos.count > 1 {
                             Label("\(post.photos.count)", systemImage: "photo.on.rectangle")
-                                .font(.caption2.bold())
+                                .font(AppTheme.Typography.caption2Bold)
                                 .foregroundStyle(.white)
                                 .padding(4)
                                 .background(.black.opacity(0.5), in: Capsule())
@@ -160,17 +160,20 @@ private struct PostRow: View {
     NotebookListView()
         .environment(SessionStore(currentUser: SampleData.owner))
         .environment(NotebookStore())
+        .environment(HealthRecordStore())
 }
 
 #Preview("보호자 (작성 버튼 없음)") {
     NotebookListView()
         .environment(SessionStore(currentUser: SampleData.parent))
         .environment(NotebookStore())
+        .environment(HealthRecordStore())
 }
 
 #Preview("선생님 (다크)") {
     NotebookListView()
         .environment(SessionStore(currentUser: SampleData.teacher))
         .environment(NotebookStore())
+        .environment(HealthRecordStore())
         .preferredColorScheme(.dark)
 }

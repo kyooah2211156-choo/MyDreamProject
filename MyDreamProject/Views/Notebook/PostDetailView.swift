@@ -6,6 +6,7 @@ struct PostDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(SessionStore.self) private var session
     @Environment(NotebookStore.self) private var store
+    @Environment(HealthRecordStore.self) private var health
     @State private var commentText = ""
     @State private var showingEditor = false
     @State private var confirmingDelete = false
@@ -31,6 +32,11 @@ struct PostDetailView: View {
                             .foregroundStyle(AppTheme.text)
                     }
                     PetNameTags(names: store.petNames(for: post))
+                    if post.taggedPetIDs.count == 1, let petID = post.taggedPetIDs.first,
+                       let record = health.record(petID: petID, on: post.date) {
+                        HealthMetricPills(record: record)
+                            .padding(.top, 4)
+                    }
                 }
                 .padding(.horizontal, AppTheme.Spacing.large)
 
@@ -97,7 +103,7 @@ struct PostDetailView: View {
                         .font(AppTheme.Typography.body)
                         .foregroundStyle(AppTheme.text)
                     Text(comment.date.formatted(date: .abbreviated, time: .shortened))
-                        .font(.caption2)
+                        .font(AppTheme.Typography.caption2)
                         .foregroundStyle(AppTheme.subText)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -137,11 +143,13 @@ struct PostDetailView: View {
     NavigationStack { PostDetailView(postID: "post-1") }
         .environment(SessionStore(currentUser: SampleData.teacher))
         .environment(NotebookStore())
+        .environment(HealthRecordStore())
 }
 
 #Preview("보호자 (수정 불가)") {
     NavigationStack { PostDetailView(postID: "post-1") }
         .environment(SessionStore(currentUser: SampleData.parent))
         .environment(NotebookStore())
+        .environment(HealthRecordStore())
         .preferredColorScheme(.dark)
 }

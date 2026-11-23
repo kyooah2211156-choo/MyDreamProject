@@ -6,6 +6,8 @@ struct TrainingListView: View {
     @Environment(SessionStore.self) private var session
     @Environment(NotebookStore.self) private var notebook
     @Environment(TrainingProgressStore.self) private var progress
+    /// 오늘 등원 정보 (원장·선생님 화면에서만 있어요)
+    @Environment(TeacherHomeViewModel.self) private var attendance: TeacherHomeViewModel?
     @State private var trainings: [Training]
     @State private var selectedPetID: String?
 
@@ -22,7 +24,7 @@ struct TrainingListView: View {
     }
 
     private func content(for user: User) -> some View {
-        let pets = notebook.visiblePets(for: user)
+        let pets = TeacherHomeViewModel.todaysPets(notebook.visiblePets(for: user), for: user, attendance: attendance)
         let selected = pets.first { $0.id == selectedPetID } ?? pets.first
         return ScrollView {
             LazyVStack(spacing: AppTheme.Spacing.medium) {
@@ -47,7 +49,10 @@ struct TrainingListView: View {
     @ViewBuilder
     private func petChips(_ pets: [Pet], selected: Pet?) -> some View {
         if pets.isEmpty {
-            Text("승인된 반려견이 없어요")
+            let isStaff = session.currentUser?.role == .owner || session.currentUser?.role == .teacher
+            let message: LocalizedStringKey = isStaff && attendance != nil
+                ? "오늘 등원한 반려견이 없어요" : "승인된 반려견이 없어요"
+            Text(message)
                 .font(AppTheme.Typography.caption)
                 .foregroundStyle(AppTheme.subText)
                 .frame(maxWidth: .infinity, alignment: .leading)

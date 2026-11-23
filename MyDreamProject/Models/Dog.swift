@@ -2,9 +2,8 @@ import Foundation
 
 /// 강아지의 오늘 등원 상태
 enum AttendanceStatus {
-    case expected   // 등원 예정 (아직 안 옴)
+    case expected   // 등원 대기 (아직 안 왔거나 하원해서 대기로 내려간 아이)
     case present    // 등원함 (유치원에 있음)
-    case departed   // 하원함 (집에 감)
 }
 
 /// 선생님 화면에서 쓰는 등원·하원용 강아지 정보.
@@ -35,6 +34,6 @@ extension Dog {
             checkInTime: Calendar.current.date(bySettingHour: 8, minute: 40, second: 0, of: .now),
             petID: "pet-bori"),
         Dog(name: "몽실", breed: "비숑 프리제", petID: "pet-mongsil"),
-        Dog(name: "하늘", breed: "시츄", status: .departed, petID: "pet-haneul")
+        Dog(name: "하늘", breed: "시츄", petID: "pet-haneul")
     ]
 }

@@ -5,10 +5,22 @@ struct TeacherHomeView: View {
     @State private var viewModel: TeacherHomeViewModel
     @State private var isEditingName = false
     @State private var nameDraft = ""
-    @State private var healthTarget: HealthTarget?
+    @State private var sheetTarget: SheetTarget?
+    /// 등원한 강아지 / 등원 대기 목록을 펼쳐 둘지 (앱을 다시 열면 펼쳐진 상태로 시작해요)
+    @State private var showsPresent = true
+    @State private var showsExpected = true
 
-    private struct HealthTarget: Identifiable {
-        let id: String   // 반려견 id
+    /// 홈에서 여는 창: 강아지의 건강 기록 / 강아지를 태그한 알림장 작성
+    private enum SheetTarget: Identifiable {
+        case health(petID: String)
+        case notebook(Dog)
+
+        var id: String {
+            switch self {
+            case .health(let petID): "health-\(petID)"
+            case .notebook(let dog): "notebook-\(dog.id)"
+            }
+        }
     }
 
     /// 유치원 이름 수정 버튼을 보여줄지 (원장만 true)
@@ -42,17 +54,13 @@ struct TeacherHomeView: View {
         .onChange(of: pets, initial: true) { _, newPets in
             syncDogs(with: newPets)
         }
-        .sheet(item: $healthTarget) { target in
-            PetHealthLogView(petID: target.id)
-        }
-        .alert(
-            "알림장 작성",
-            isPresented: notebookAlertShown,
-            presenting: viewModel.dogForNotebook
-        ) { _ in
-            Button("확인", role: .cancel) {}
-        } message: { dog in
-            Text("\(dog.name)의 알림장 작성 화면은 다음 단계에서 만들어요.")
+        .sheet(item: $sheetTarget) { target in
+            switch target {
+            case .health(let petID):
+                PetHealthLogView(petID: petID)
+            case .notebook(let dog):
+                PostEditorView(mode: .create, initialTaggedPetIDs: dog.petID.map { [$0] } ?? [])
+            }
         }
     }
 
@@ -84,40 +92,37 @@ struct TeacherHomeView: View {
             WarningEntryCard()
         }
         if showsHealthRecords {
-            HealthRecordsCard(petIDs: nil, canEdit: true)
+            HealthRecordsCard(petIDs: nil, canEdit: true, attendingPetIDs: viewModel.presentPetIDs)
         }
     }
 
     @ViewBuilder
     private var presentSection: some View {
-        sectionTitle("현재 등원한 강아지", count: viewModel.presentDogs.count)
-        if viewModel.presentDogs.isEmpty {
-            emptyText("아직 등원한 강아지가 없어요")
-        } else {
-            ForEach(viewModel.presentDogs) { dog in
-                presentRow(dog)
+        sectionTitle("현재 등원한 강아지", count: viewModel.presentDogs.count, isExpanded: $showsPresent)
+        if showsPresent {
+            if viewModel.presentDogs.isEmpty {
+                emptyText("아직 등원한 강아지가 없어요")
+            } else {
+                ForEach(viewModel.presentDogs) { dog in
+                    presentRow(dog)
+                }
             }
         }
     }
 
     @ViewBuilder
     private var expectedSection: some View {
-        sectionTitle("등원 대기", count: viewModel.expectedDogs.count)
+        sectionTitle("등원 대기", count: viewModel.expectedDogs.count, isExpanded: $showsExpected)
             .padding(.top, 8)
-        if viewModel.expectedDogs.isEmpty {
-            emptyText("대기 중인 강아지가 없어요")
-        } else {
-            ForEach(viewModel.expectedDogs) { dog in
-                expectedRow(dog)
+        if showsExpected {
+            if viewModel.expectedDogs.isEmpty {
+                emptyText("대기 중인 강아지가 없어요")
+            } else {
+                ForEach(viewModel.expectedDogs) { dog in
+                    expectedRow(dog)
+                }
             }
         }
-    }
-
-    private var notebookAlertShown: Binding<Bool> {
-        Binding(
-            get: { viewModel.dogForNotebook != nil },
-            set: { if !$0 { viewModel.dogForNotebook = nil } }
-        )
     }
 
     private func syncDogs(with newPets: [Pet]?) {
@@ -130,11 +135,11 @@ struct TeacherHomeView: View {
         ZStack(alignment: .bottomTrailing) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("안녕하세요, 선생님 🐾")
-                    .font(.footnote.weight(.bold))
+                    .font(AppTheme.Typography.footnoteBold)
                     .opacity(0.9)
                 HStack(spacing: 4) {
                     Text(viewModel.kindergartenName)
-                        .font(.title.weight(.black))
+                        .font(AppTheme.Typography.heroTitle)
                         .lineLimit(2)
                     if canEditKindergartenName {
                         Button {
@@ -149,7 +154,7 @@ struct TeacherHomeView: View {
                     }
                 }
                 Text("댕답개 배우개")
-                    .font(.caption.weight(.bold))
+                    .font(AppTheme.Typography.captionBold)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(.white.opacity(0.28), in: Capsule())
@@ -183,14 +188,14 @@ struct TeacherHomeView: View {
     private var summaryCard: some View {
         HStack(spacing: 14) {
             Text("\(viewModel.scheduledCount)")
-                .font(.system(size: 44, weight: .black, design: .rounded))
+                .font(AppTheme.Typography.statNumber)
                 .foregroundStyle(AppTheme.button)
             VStack(alignment: .leading, spacing: 6) {
                 Text("오늘 등원 예정")
-                    .font(.headline)
+                    .font(AppTheme.Typography.headline)
                     .foregroundStyle(AppTheme.text)
                 Text("\(viewModel.arrivedCount)마리 등원 완료")
-                    .font(.caption.weight(.bold))
+                    .font(AppTheme.Typography.captionBold)
                     .foregroundStyle(AppTheme.subText)
                 ProgressView(value: Double(viewModel.arrivedCount),
                              total: Double(max(viewModel.scheduledCount, 1)))
@@ -206,17 +211,31 @@ struct TeacherHomeView: View {
 
     // MARK: - 목록
 
-    private func sectionTitle(_ title: LocalizedStringKey, count: Int) -> some View {
-        HStack(spacing: 6) {
-            Text(title).font(.headline).foregroundStyle(AppTheme.text)
-            Text("\(count)").font(.subheadline.weight(.bold)).foregroundStyle(AppTheme.subText)
+    /// 제목을 누르면 아래 목록이 접히고 펼쳐져요.
+    private func sectionTitle(_ title: LocalizedStringKey, count: Int, isExpanded: Binding<Bool>) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { isExpanded.wrappedValue.toggle() }
+        } label: {
+            HStack(spacing: 6) {
+                Text(title).font(AppTheme.Typography.headline).foregroundStyle(AppTheme.text)
+                Text("\(count)").font(AppTheme.Typography.subheadlineBold).foregroundStyle(AppTheme.subText)
+                Image(systemName: "chevron.down")
+                    .font(AppTheme.Typography.caption)
+                    .foregroundStyle(AppTheme.subText)
+                    .rotationEffect(.degrees(isExpanded.wrappedValue ? 0 : -90))
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 4)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, 4)
+        .buttonStyle(.plain)
+        .accessibilityHint(Text(isExpanded.wrappedValue ? String(localized: "누르면 접어요") : String(localized: "누르면 펼쳐요")))
     }
 
     private func emptyText(_ text: LocalizedStringKey) -> some View {
         Text(text)
-            .font(.subheadline)
+            .font(AppTheme.Typography.subheadline)
             .foregroundStyle(AppTheme.subText)
             .frame(maxWidth: .infinity, minHeight: 64)
             .background(AppTheme.card, in: RoundedRectangle(cornerRadius: 22))
@@ -227,7 +246,7 @@ struct TeacherHomeView: View {
     private func dogHeader(_ dog: Dog, detail: String) -> some View {
         if showsHealthRecords, let petID = dog.petID {
             Button {
-                healthTarget = HealthTarget(id: petID)
+                sheetTarget = .health(petID: petID)
             } label: {
                 dogInfo(dog, detail: detail, showsHealthHint: true)
             }
@@ -247,10 +266,10 @@ struct TeacherHomeView: View {
                 .background(AppTheme.avatar, in: Circle())
             VStack(alignment: .leading, spacing: 2) {
                 Text(dog.name)
-                    .font(.title3.weight(.heavy))
+                    .font(AppTheme.Typography.title3Heavy)
                     .foregroundStyle(AppTheme.text)
                 Text(detail)
-                    .font(.caption)
+                    .font(AppTheme.Typography.captionRegular)
                     .foregroundStyle(AppTheme.subText)
             }
             Spacer(minLength: 0)
@@ -272,7 +291,7 @@ struct TeacherHomeView: View {
             dogHeader(dog, detail: detail)
             HStack(spacing: 10) {
                 Button {
-                    viewModel.dogForNotebook = dog
+                    sheetTarget = .notebook(dog)
                 } label: {
                     Label("알림장 작성", systemImage: "square.and.pencil")
                 }
@@ -357,6 +376,8 @@ private struct WarningEntryCard: View {
 
 #Preview("라이트") {
     TeacherHomeView(viewModel: .sample)
+        .environment(SessionStore(currentUser: SampleData.teacher))
+        .environment(NotebookStore())
 }
 
 #Preview("원장 (경고 관리 포함)") {
@@ -369,10 +390,14 @@ private struct WarningEntryCard: View {
 
 #Preview("선생님용 (이름 수정 불가)") {
     TeacherHomeView(viewModel: .sample, canEditKindergartenName: false)
+        .environment(SessionStore(currentUser: SampleData.teacher))
+        .environment(NotebookStore())
 }
 
 #Preview("다크") {
     TeacherHomeView(viewModel: .sample)
+        .environment(SessionStore(currentUser: SampleData.owner))
+        .environment(NotebookStore())
         .preferredColorScheme(.dark)
 }
 
@@ -384,4 +409,6 @@ private struct WarningEntryCard: View {
             nameStore: InMemoryKindergartenNameStore()
         )
     )
+    .environment(SessionStore(currentUser: SampleData.teacher))
+    .environment(NotebookStore())
 }

@@ -38,6 +38,7 @@ private enum SignedInSheet: String, Identifiable {
     case notifications
     case schedule
     case staff
+    case settings
 
     var id: String { rawValue }
 }
@@ -51,6 +52,8 @@ private struct SignedInView: View {
     @Environment(NotificationStore.self) private var notifications
     @Environment(\.scenePhase) private var scenePhase
     @State private var activeSheet: SignedInSheet?
+    /// 오늘 등원 상태. 홈·알림장 작성·건강 기록·훈련 화면이 함께 씁니다.
+    @State private var attendance = TeacherHomeViewModel.live
     let user: User
 
     var body: some View {
@@ -85,16 +88,23 @@ private struct SignedInView: View {
                 session.validateSession()
             }
         }
+        // 날짜가 바뀌면 어제 등원 상태를 비우고 모두 '등원 대기'로 시작합니다.
+        .onAppear { attendance.startNewDayIfNeeded() }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { session.validateSession() }
+            if phase == .active {
+                session.validateSession()
+                attendance.startNewDayIfNeeded()
+            }
         }
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
             case .notifications: NotificationListView()
             case .schedule: ScheduleView()
             case .staff: StaffManagementView()
+            case .settings: SettingsView()
             }
         }
+        .environment(attendance)
     }
 
     private var userBar: some View {
@@ -102,6 +112,8 @@ private struct SignedInView: View {
             Text("\(user.name) · \(user.role.displayName)")
                 .font(AppTheme.Typography.headline)
                 .foregroundStyle(AppTheme.text)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
             Spacer()
             if Permissions.canManageStaff(user) {
                 iconButton("person.2.fill", label: "직원 관리") { activeSheet = .staff }
@@ -110,6 +122,7 @@ private struct SignedInView: View {
                 iconButton("calendar", label: "한 달 시간표") { activeSheet = .schedule }
                 notificationButton
             }
+            iconButton("gearshape.fill", label: "설정") { activeSheet = .settings }
             Button("로그아웃") { session.logout() }
                 .font(AppTheme.Typography.caption)
                 .foregroundStyle(AppTheme.softButtonText)
@@ -140,7 +153,7 @@ private struct SignedInView: View {
                 .overlay(alignment: .topTrailing) {
                     if unread > 0 {
                         Text("\(unread)")
-                            .font(.caption2.bold())
+                            .font(AppTheme.Typography.caption2Bold)
                             .foregroundStyle(.white)
                             .padding(.horizontal, 5)
                             .frame(minWidth: 18, minHeight: 18)
@@ -156,10 +169,10 @@ private struct SignedInView: View {
     private var home: some View {
         switch user.role {
         case .owner:
-            TeacherHomeView(viewModel: .live, canEditKindergartenName: true, canManageWarnings: true,
+            TeacherHomeView(viewModel: attendance, canEditKindergartenName: true, canManageWarnings: true,
                             showsHealthRecords: true, pets: store.pets.filter(\.isApproved))
         case .teacher:
-            TeacherHomeView(viewModel: .live, canEditKindergartenName: false, showsHealthRecords: true,
+            TeacherHomeView(viewModel: attendance, canEditKindergartenName: false, showsHealthRecords: true,
                             pets: store.pets.filter(\.isApproved))
         case .parent:
             ParentHomeView()

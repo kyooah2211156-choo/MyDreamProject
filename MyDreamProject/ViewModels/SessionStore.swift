@@ -26,7 +26,7 @@ final class SessionStore {
         do {
             currentUser = try await authService.login(id: id, password: password)
         } catch {
-            errorMessage = (error as? LocalizedError)?.errorDescription ?? "로그인에 실패했어요."
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? String(localized: "로그인에 실패했어요.")
         }
     }
 
@@ -38,7 +38,7 @@ final class SessionStore {
         do {
             return try await authService.register(name: name, id: id, password: password, role: role, inviteCode: inviteCode)
         } catch {
-            errorMessage = (error as? LocalizedError)?.errorDescription ?? "가입에 실패했어요."
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? String(localized: "가입에 실패했어요.")
             return nil
         }
     }

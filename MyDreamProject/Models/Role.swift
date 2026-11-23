@@ -9,10 +9,10 @@ enum Role: String, Codable, CaseIterable, Hashable {
 
     var displayName: String {
         switch self {
-        case .owner: "원장"
-        case .teacher: "선생님"
-        case .parent: "보호자"
-        case .admin: "운영자"
+        case .owner: String(localized: "원장")
+        case .teacher: String(localized: "선생님")
+        case .parent: String(localized: "보호자")
+        case .admin: String(localized: "운영자")
         }
     }
 }

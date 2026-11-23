@@ -14,9 +14,9 @@ struct PetProfileCard: View {
                 if let birthDate = profile.birthDate {
                     row("생년월일", birthDate.formatted(date: .long, time: .omitted))
                 }
-                row("연령", "\(profile.ageYears)살")
-                row("중성화", profile.isNeutered ? "예" : "아니오")
-                row("동물등록", profile.isAnimalRegistered ? "예" : "아니오")
+                row("연령", String(localized: "\(profile.ageYears)살"))
+                row("중성화", profile.isNeutered ? String(localized: "예") : String(localized: "아니오"))
+                row("동물등록", profile.isAnimalRegistered ? String(localized: "예") : String(localized: "아니오"))
                 row("예방접종", profile.vaccination.displayName)
                 row("알러지", profile.allergy)
                 row("건강상태", profile.healthCondition)
@@ -33,7 +33,7 @@ struct PetProfileCard: View {
         .shadow(color: AppTheme.cardShadow, radius: 8, y: 4)
     }
 
-    private func row(_ title: String, _ value: String) -> some View {
+    private func row(_ title: LocalizedStringKey, _ value: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Text(title)
                 .font(AppTheme.Typography.caption)

@@ -8,9 +8,9 @@ enum PetStatus: String, Codable, CaseIterable, Hashable {
 
     var displayName: String {
         switch self {
-        case .pending: "대기중"
-        case .approved: "승인됨"
-        case .rejected: "반려됨"
+        case .pending: String(localized: "대기중")
+        case .approved: String(localized: "승인됨")
+        case .rejected: String(localized: "반려됨")
         }
     }
 }

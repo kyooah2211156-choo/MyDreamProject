@@ -44,7 +44,7 @@ struct PostEditorView: View {
     }
 
     /// 영상 분류면 영상을, 아니면 사진을 고릅니다.
-    private var mediaName: String { category == .video ? "영상" : "사진" }
+    private var mediaName: String { category == .video ? String(localized: "영상") : String(localized: "사진") }
 
     private var trimmedText: String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var canSave: Bool { !isLoadingPhotos && !(photos.isEmpty && trimmedText.isEmpty) }
@@ -85,7 +85,7 @@ struct PostEditorView: View {
                 .padding(AppTheme.Spacing.large)
             }
             .background(AppTheme.background.ignoresSafeArea())
-            .navigationTitle(isEditing ? "사진글 수정" : "사진글 작성")
+            .navigationTitle(isEditing ? String(localized: "사진글 수정") : String(localized: "사진글 작성"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("취소") { dismiss() } }
@@ -110,7 +110,7 @@ struct PostEditorView: View {
         return store.visiblePets(for: user)
     }
 
-    private func sectionTitle(_ title: String) -> some View {
+    private func sectionTitle(_ title: LocalizedStringKey) -> some View {
         Text(title)
             .font(AppTheme.Typography.headline)
             .foregroundStyle(AppTheme.text)
@@ -180,7 +180,7 @@ struct PostEditorView: View {
         switch mode {
         case .create:
             guard Permissions.canWritePost(user) else {
-                errorMessage = "사진글을 올릴 권한이 없어요."
+                errorMessage = String(localized: "사진글을 올릴 권한이 없어요.")
                 return
             }
             store.save(post: Post(id: UUID().uuidString, authorID: user.id, text: trimmedText,
@@ -188,7 +188,7 @@ struct PostEditorView: View {
                                   category: category))
         case .edit(let original):
             guard Permissions.canEdit(original, by: user) else {
-                errorMessage = "이 글을 수정할 권한이 없어요."
+                errorMessage = String(localized: "이 글을 수정할 권한이 없어요.")
                 return
             }
             var post = original

@@ -108,7 +108,7 @@ struct PetApprovalView: View {
         .background(AppTheme.card, in: RoundedRectangle(cornerRadius: 16))
     }
 
-    private func sectionTitle(_ title: String) -> some View {
+    private func sectionTitle(_ title: LocalizedStringKey) -> some View {
         Text(title)
             .font(AppTheme.Typography.headline)
             .foregroundStyle(AppTheme.text)
@@ -120,16 +120,16 @@ struct PetApprovalView: View {
         guard Permissions.canReviewPets(user),
               let updated = store.approvePet(id: pet.id, reviewerID: user.id) else { return }
         notifications.send(to: updated.requesterID,
-                           title: "반려견 등록이 승인됐어요",
-                           content: "\(updated.name)의 등록이 승인되었습니다.")
+                           title: String(localized: "반려견 등록이 승인됐어요"),
+                           content: String(localized: "\(updated.name)의 등록이 승인되었습니다."))
     }
 
     private func reject(_ pet: Pet, reason: String, by user: User) {
         guard Permissions.canReviewPets(user),
               let updated = store.rejectPet(id: pet.id, reviewerID: user.id, reason: reason) else { return }
         notifications.send(to: updated.requesterID,
-                           title: "반려견 등록이 반려됐어요",
-                           content: "\(updated.name)의 등록이 반려되었습니다. 사유: \(updated.rejectionReason ?? reason)")
+                           title: String(localized: "반려견 등록이 반려됐어요"),
+                           content: String(localized: "\(updated.name)의 등록이 반려되었습니다. 사유: \(updated.rejectionReason ?? reason)"))
     }
 }
 

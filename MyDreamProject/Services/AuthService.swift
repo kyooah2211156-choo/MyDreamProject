@@ -15,16 +15,16 @@ enum LoginError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .emptyField: "아이디와 비밀번호를 모두 입력해 주세요."
-        case .invalidCredentials: "아이디 또는 비밀번호가 맞지 않아요."
-        case .duplicateID: "이미 사용 중인 아이디예요."
-        case .shortPassword: "비밀번호는 4자 이상 입력해 주세요."
-        case .invalidInvite: "초대 코드가 올바르지 않거나 이미 사용됐어요."
-        case .notAllowed: "이 유형으로는 가입할 수 없어요."
-        case .pendingApproval: "서비스 운영자의 승인을 기다리고 있어요. 승인되면 로그인할 수 있어요."
-        case .accountRejected: "가입이 반려됐어요. 자세한 내용은 운영자에게 문의해 주세요."
-        case .accountResigned: "더 이상 이용할 수 없는 계정이에요."
-        case .accountSuspended: "운영규칙 경고가 3회 쌓여 이용이 중단됐어요. 원장님께 문의해 주세요."
+        case .emptyField: String(localized: "아이디와 비밀번호를 모두 입력해 주세요.")
+        case .invalidCredentials: String(localized: "아이디 또는 비밀번호가 맞지 않아요.")
+        case .duplicateID: String(localized: "이미 사용 중인 아이디예요.")
+        case .shortPassword: String(localized: "비밀번호는 4자 이상 입력해 주세요.")
+        case .invalidInvite: String(localized: "초대 코드가 올바르지 않거나 이미 사용됐어요.")
+        case .notAllowed: String(localized: "이 유형으로는 가입할 수 없어요.")
+        case .pendingApproval: String(localized: "서비스 운영자의 승인을 기다리고 있어요. 승인되면 로그인할 수 있어요.")
+        case .accountRejected: String(localized: "가입이 반려됐어요. 자세한 내용은 운영자에게 문의해 주세요.")
+        case .accountResigned: String(localized: "더 이상 이용할 수 없는 계정이에요.")
+        case .accountSuspended: String(localized: "운영규칙 경고가 3회 쌓여 이용이 중단됐어요. 원장님께 문의해 주세요.")
         }
     }
 

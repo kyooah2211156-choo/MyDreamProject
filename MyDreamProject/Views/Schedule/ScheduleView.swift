@@ -218,7 +218,7 @@ struct ScheduleView: View {
                 .fill(event.kind.color)
                 .frame(width: 5)
             VStack(alignment: .leading, spacing: 4) {
-                Text(event.isAllDay ? "종일"
+                Text(event.isAllDay ? String(localized: "종일")
                      : "\(event.start.formatted(date: .omitted, time: .shortened)) ~ \(event.end.formatted(date: .omitted, time: .shortened))")
                     .font(AppTheme.Typography.caption)
                     .foregroundStyle(AppTheme.subText)

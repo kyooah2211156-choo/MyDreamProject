@@ -67,7 +67,7 @@ struct NotificationListView: View {
             .background(AppTheme.card, in: RoundedRectangle(cornerRadius: 18))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(item.isRead ? "" : "안 읽음. ")\(item.title)")
+        .accessibilityLabel(item.isRead ? item.title : String(localized: "안 읽음. \(item.title)"))
     }
 }
 

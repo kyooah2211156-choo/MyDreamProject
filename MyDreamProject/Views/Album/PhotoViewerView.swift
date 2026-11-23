@@ -151,7 +151,7 @@ struct PhotoViewerView: View {
             }
         } else {
             ShareLink(item: SharablePhoto(source: source),
-                      preview: SharePreview("댕답개 배우개 사진")) {
+                      preview: SharePreview(String(localized: "댕답개 배우개 사진"))) {
                 Label("공유", systemImage: "square.and.arrow.up")
             }
         }

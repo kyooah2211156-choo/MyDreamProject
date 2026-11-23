@@ -8,9 +8,9 @@ enum VaccinationStatus: String, Codable, CaseIterable, Hashable {
 
     var displayName: String {
         switch self {
-        case .complete: "접종 완료"
-        case .partial: "일부 접종"
-        case .notVaccinated: "미접종"
+        case .complete: String(localized: "접종 완료")
+        case .partial: String(localized: "일부 접종")
+        case .notVaccinated: String(localized: "미접종")
         }
     }
 }
@@ -22,8 +22,8 @@ enum PetGender: String, Codable, CaseIterable, Hashable {
 
     var displayName: String {
         switch self {
-        case .male: "수컷"
-        case .female: "암컷"
+        case .male: String(localized: "수컷")
+        case .female: String(localized: "암컷")
         }
     }
 }

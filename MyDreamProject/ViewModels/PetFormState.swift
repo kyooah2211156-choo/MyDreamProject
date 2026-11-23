@@ -18,6 +18,23 @@ enum PetFormField: String, CaseIterable, Identifiable {
 
     /// 생년월일만 선택 사항이고, 나머지는 모두 필수
     var isRequired: Bool { self != .birthDate }
+
+    /// 화면에 보여줄 이름 (기기 언어에 맞춰 번역돼요)
+    var title: String {
+        switch self {
+        case .name: String(localized: "이름")
+        case .breed: String(localized: "견종")
+        case .vaccination: String(localized: "예방접종")
+        case .neutered: String(localized: "중성화 여부")
+        case .allergy: String(localized: "알러지")
+        case .gender: String(localized: "성별")
+        case .birthDate: String(localized: "생년월일")
+        case .age: String(localized: "연령")
+        case .health: String(localized: "건강상태")
+        case .temperament: String(localized: "성향")
+        case .animalRegistration: String(localized: "동물등록 확인")
+        }
+    }
 }
 
 /// 반려견 정보 입력 중인 값. 모든 항목이 필수입니다.

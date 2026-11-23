@@ -47,7 +47,7 @@ struct AlbumView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 if !items.isEmpty {
-                    Button(isSelecting ? "완료" : "선택") {
+                    Button(isSelecting ? String(localized: "완료") : String(localized: "선택")) {
                         isSelecting.toggle()
                         selectedPhotoIDs = []
                     }
@@ -76,7 +76,7 @@ struct AlbumView: View {
 
     private var filterBar: some View {
         HStack(spacing: AppTheme.Spacing.small) {
-            filterChip(title: "전체", isOn: selectedCategory == nil) { selectedCategory = nil }
+            filterChip(title: String(localized: "전체"), isOn: selectedCategory == nil) { selectedCategory = nil }
             ForEach(PostCategory.allCases, id: \.self) { category in
                 filterChip(title: category.displayName, isOn: selectedCategory == category) {
                     selectedCategory = category
@@ -138,7 +138,7 @@ struct AlbumView: View {
                 }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isVideoPost ? "영상" : "사진")
+        .accessibilityLabel(isVideoPost ? String(localized: "영상") : String(localized: "사진"))
     }
 
     // MARK: 여러 장 저장·공유
@@ -155,7 +155,7 @@ struct AlbumView: View {
                 .foregroundStyle(AppTheme.text)
             Spacer()
             ShareLink(items: shareable.map { SharablePhoto(source: $0.photo.source) },
-                      preview: { _ in SharePreview("댕답개 배우개 사진") }) {
+                      preview: { _ in SharePreview(String(localized: "댕답개 배우개 사진")) }) {
                 Label("공유", systemImage: "square.and.arrow.up")
             }
             .buttonStyle(SoftButtonStyle())

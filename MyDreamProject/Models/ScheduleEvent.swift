@@ -9,10 +9,10 @@ enum ScheduleKind: String, Codable, CaseIterable, Hashable {
 
     var displayName: String {
         switch self {
-        case .program: "프로그램"
-        case .freeTime: "자유시간"
-        case .event: "행사"
-        case .closed: "휴원"
+        case .program: String(localized: "프로그램")
+        case .freeTime: String(localized: "자유시간")
+        case .event: String(localized: "행사")
+        case .closed: String(localized: "휴원")
         }
     }
 }

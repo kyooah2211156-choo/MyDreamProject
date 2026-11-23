@@ -93,7 +93,7 @@ struct OwnerApprovalView: View {
         .shadow(color: AppTheme.cardShadow, radius: 8, y: 4)
     }
 
-    private func sectionTitle(_ title: String) -> some View {
+    private func sectionTitle(_ title: LocalizedStringKey) -> some View {
         Text(title)
             .font(AppTheme.Typography.headline)
             .foregroundStyle(AppTheme.text)

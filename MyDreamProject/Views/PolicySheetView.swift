@@ -14,11 +14,12 @@ struct PolicySheetView: View {
                         warningCard(user)
                     }
                     KindergartenPolicyView()
+                    PrivacyConsentView()
                 }
                 .padding(AppTheme.Spacing.large)
             }
             .background(AppTheme.background.ignoresSafeArea())
-            .navigationTitle("유치원 철학 · 운영규칙")
+            .navigationTitle("운영규칙 · 개인정보")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
@@ -46,7 +47,7 @@ struct PolicySheetView: View {
                             .frame(width: 12, height: 12)
                     }
                 }
-                Text(count == 0 ? "받은 경고가 없어요" : "경고는 원장님이 직접 기록해요")
+                Text(count == 0 ? String(localized: "받은 경고가 없어요") : String(localized: "경고는 원장님이 직접 기록해요"))
                     .font(AppTheme.Typography.caption)
                     .foregroundStyle(AppTheme.subText)
             }

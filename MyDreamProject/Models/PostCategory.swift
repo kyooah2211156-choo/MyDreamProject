@@ -8,9 +8,9 @@ enum PostCategory: String, Codable, CaseIterable, Hashable {
 
     var displayName: String {
         switch self {
-        case .program: "프로그램"
-        case .freeTime: "자유시간"
-        case .video: "영상"
+        case .program: String(localized: "프로그램")
+        case .freeTime: String(localized: "자유시간")
+        case .video: String(localized: "영상")
         }
     }
 }

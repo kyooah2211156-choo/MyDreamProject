@@ -21,6 +21,7 @@ struct SignUpView: View {
     @State private var passwordConfirm = ""
     @State private var inviteCode = ""
     @State private var agreedToPolicy = false
+    @State private var agreedToPrivacy = false
     @State private var form = PetFormState()
     @State private var showErrors = false
 
@@ -33,23 +34,24 @@ struct SignUpView: View {
         text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private var nameLabel: String { role == .parent ? "보호자 이름" : "이름" }
+    private var nameLabel: String { role == .parent ? String(localized: "보호자 이름") : String(localized: "이름") }
 
     /// 계정 정보 중 비어 있거나 맞지 않는 항목
     private var missingAccount: [String] {
         var missing: [String] = []
         if clean(name).isEmpty { missing.append(nameLabel) }
-        if clean(userID).isEmpty { missing.append("아이디") }
-        if password.isEmpty { missing.append("비밀번호") }
-        if passwordConfirm.isEmpty || passwordConfirm != password { missing.append("비밀번호 확인(같아야 해요)") }
-        if role == .teacher && clean(inviteCode).isEmpty { missing.append("초대 코드") }
+        if clean(userID).isEmpty { missing.append(String(localized: "아이디")) }
+        if password.isEmpty { missing.append(String(localized: "비밀번호")) }
+        if passwordConfirm.isEmpty || passwordConfirm != password { missing.append(String(localized: "비밀번호 확인(같아야 해요)")) }
+        if role == .teacher && clean(inviteCode).isEmpty { missing.append(String(localized: "초대 코드")) }
         return missing
     }
 
     private var allMissing: [String] {
         missingAccount
-            + (role == .parent ? form.missingFields.map(\.rawValue) : [])
-            + (role == .parent && !agreedToPolicy ? ["운영규칙 동의"] : [])
+            + (role == .parent ? form.missingFields.map(\.title) : [])
+            + (role == .parent && !agreedToPolicy ? [String(localized: "운영규칙 동의")] : [])
+            + (role == .parent && !agreedToPrivacy ? [String(localized: "개인정보 수집·이용 동의")] : [])
     }
 
     var body: some View {
@@ -81,12 +83,18 @@ struct SignUpView: View {
                             .font(AppTheme.Typography.title)
                             .foregroundStyle(AppTheme.text)
                         KindergartenPolicyView()
-                        policyAgreement
+
+                        Text("개인정보 수집·이용")
+                            .font(AppTheme.Typography.title)
+                            .foregroundStyle(AppTheme.text)
+                        PrivacyConsentView()
+
+                        agreementSection
                     }
 
 
                     if showErrors && !allMissing.isEmpty {
-                        Text("빠진 항목: " + allMissing.joined(separator: ", "))
+                        Text("빠진 항목: \(allMissing.joined(separator: ", "))")
                             .font(AppTheme.Typography.caption)
                             .foregroundStyle(AppTheme.statusRejected)
                     }
@@ -127,17 +135,31 @@ struct SignUpView: View {
         }
     }
 
-    /// 철학과 운영규칙에 동의하는 체크 (동의해야 가입할 수 있어요)
-    private var policyAgreement: some View {
-        let isMissing = showErrors && !agreedToPolicy
-        return Button {
-            agreedToPolicy.toggle()
+    /// 동의 체크 모음 (필수 2개 + 전체 동의). 둘 다 동의해야 가입할 수 있어요.
+    private var agreementSection: some View {
+        VStack(spacing: 8) {
+            agreementRow("전체 동의",
+                         isOn: Binding(
+                            get: { agreedToPolicy && agreedToPrivacy },
+                            set: { agreedToPolicy = $0; agreedToPrivacy = $0 }
+                         ),
+                         showsError: false)
+            agreementRow("[필수] 위 철학과 운영규칙을 읽었고, 지키겠습니다.",
+                         isOn: $agreedToPolicy, showsError: showErrors && !agreedToPolicy)
+            agreementRow("[필수] 개인정보 수집·이용에 동의합니다.",
+                         isOn: $agreedToPrivacy, showsError: showErrors && !agreedToPrivacy)
+        }
+    }
+
+    private func agreementRow(_ title: LocalizedStringKey, isOn: Binding<Bool>, showsError: Bool) -> some View {
+        Button {
+            isOn.wrappedValue.toggle()
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: agreedToPolicy ? "checkmark.square.fill" : "square")
+                Image(systemName: isOn.wrappedValue ? "checkmark.square.fill" : "square")
                     .font(.title2)
-                    .foregroundStyle(agreedToPolicy ? AppTheme.statusApproved : AppTheme.subText)
-                Text("위 철학과 운영규칙을 읽었고, 지키겠습니다. *")
+                    .foregroundStyle(isOn.wrappedValue ? AppTheme.statusApproved : AppTheme.subText)
+                Text(title)
                     .font(AppTheme.Typography.headline)
                     .foregroundStyle(AppTheme.text)
                     .multilineTextAlignment(.leading)
@@ -148,35 +170,35 @@ struct SignUpView: View {
             .background(AppTheme.card, in: RoundedRectangle(cornerRadius: 18))
             .overlay {
                 RoundedRectangle(cornerRadius: 18)
-                    .stroke(isMissing ? AppTheme.statusRejected : Color.clear, lineWidth: 2)
+                    .stroke(showsError ? AppTheme.statusRejected : Color.clear, lineWidth: 2)
             }
         }
         .buttonStyle(.plain)
-        .accessibilityAddTraits(agreedToPolicy ? .isSelected : [])
+        .accessibilityAddTraits(isOn.wrappedValue ? .isSelected : [])
     }
 
     /// 유형별 안내 문구
     private var roleNotice: String {
         switch role {
-        case .owner: "원장 가입은 서비스 운영자의 승인이 필요해요. 승인되면 아이디와 비밀번호로 로그인할 수 있어요."
-        case .teacher: "선생님은 원장님이 만든 초대 코드로만 가입할 수 있어요. 가입 후에는 아이디와 비밀번호로 로그인해요."
-        default: "가입 후에는 로그인 화면에서 아이디와 비밀번호를 입력해 들어가요."
+        case .owner: String(localized: "원장 가입은 서비스 운영자의 승인이 필요해요. 승인되면 아이디와 비밀번호로 로그인할 수 있어요.")
+        case .teacher: String(localized: "선생님은 원장님이 만든 초대 코드로만 가입할 수 있어요. 가입 후에는 아이디와 비밀번호로 로그인해요.")
+        default: String(localized: "가입 후에는 로그인 화면에서 아이디와 비밀번호를 입력해 들어가요.")
         }
     }
 
     private var submitTitle: String {
         switch role {
-        case .owner: "가입 신청하기"
-        case .parent: "가입하고 승인 요청하기"
-        default: "가입하기"
+        case .owner: String(localized: "가입 신청하기")
+        case .parent: String(localized: "가입하고 승인 요청하기")
+        default: String(localized: "가입하기")
         }
     }
 
     /// 로그인 화면에 보여줄 가입 완료 안내
     private var completionMessage: String {
         role == .owner
-            ? "가입 신청이 접수됐어요. 서비스 운영자가 승인하면 아이디와 비밀번호로 로그인할 수 있어요."
-            : "가입이 완료됐어요! 아이디와 비밀번호로 로그인해 주세요."
+            ? String(localized: "가입 신청이 접수됐어요. 서비스 운영자가 승인하면 아이디와 비밀번호로 로그인할 수 있어요.")
+            : String(localized: "가입이 완료됐어요! 아이디와 비밀번호로 로그인해 주세요.")
     }
 
     private var accountCard: some View {

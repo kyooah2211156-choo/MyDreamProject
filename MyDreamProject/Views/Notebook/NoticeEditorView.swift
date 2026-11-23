@@ -53,7 +53,7 @@ struct NoticeEditorView: View {
                 .padding(AppTheme.Spacing.large)
             }
             .background(AppTheme.background.ignoresSafeArea())
-            .navigationTitle(isEditing ? "공지 수정" : "공지 작성")
+            .navigationTitle(isEditing ? String(localized: "공지 수정") : String(localized: "공지 작성"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("취소") { dismiss() } }

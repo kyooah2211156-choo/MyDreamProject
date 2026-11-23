@@ -13,7 +13,9 @@ struct LoginView: View {
             VStack(spacing: AppTheme.Spacing.large) {
                 header
                 formCard
+                #if DEBUG
                 sampleAccounts
+                #endif
                 signUpLink
             }
             .padding(.bottom, AppTheme.Spacing.screen)
@@ -100,6 +102,8 @@ struct LoginView: View {
         .padding(.horizontal, AppTheme.Spacing.large)
     }
 
+    #if DEBUG
+    /// 개발 중에만 보이는 연습용 샘플 계정 버튼 (앱스토어·테스트플라이트로 배포하는 버전에서는 자동으로 빠져요)
     private var sampleAccounts: some View {
         VStack(spacing: 8) {
             Text("연습용 샘플 계정 (누르면 자동으로 입력돼요)")
@@ -115,19 +119,20 @@ struct LoginView: View {
         }
     }
 
-    private var signUpLink: some View {
-        Button("회원가입 (원장 · 선생님 · 보호자)") { showingSignUp = true }
-            .font(AppTheme.Typography.headline)
-            .foregroundStyle(AppTheme.softButtonText)
-            .frame(minHeight: 44)
-    }
-
     private func sampleButton(_ title: String, id sampleID: String) -> some View {
         Button(title) {
             id = sampleID
             password = "1234"
         }
         .buttonStyle(SoftButtonStyle())
+    }
+    #endif
+
+    private var signUpLink: some View {
+        Button("회원가입 (원장 · 선생님 · 보호자)") { showingSignUp = true }
+            .font(AppTheme.Typography.headline)
+            .foregroundStyle(AppTheme.softButtonText)
+            .frame(minHeight: 44)
     }
 
     private func submit() {

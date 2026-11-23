@@ -30,10 +30,10 @@ struct PetRegistrationFormView: View {
                     .foregroundStyle(AppTheme.subText)
             }
             field(.neutered) {
-                OptionChips(options: [true, false], selection: $form.isNeutered) { $0 ? "예" : "아니오" }
+                OptionChips(options: [true, false], selection: $form.isNeutered) { $0 ? String(localized: "예") : String(localized: "아니오") }
             }
             field(.animalRegistration) {
-                OptionChips(options: [true, false], selection: $form.isAnimalRegistered) { $0 ? "예" : "아니오" }
+                OptionChips(options: [true, false], selection: $form.isAnimalRegistered) { $0 ? String(localized: "예") : String(localized: "아니오") }
                 Text("동물등록 여부만 체크해 주세요. 등록번호 등은 원장님이 직접 확인해요.")
                     .font(AppTheme.Typography.caption)
                     .foregroundStyle(AppTheme.subText)
@@ -93,7 +93,7 @@ struct PetRegistrationFormView: View {
         }
     }
 
-    private func inputField(_ placeholder: String, text: Binding<String>, multiline: Bool = false) -> some View {
+    private func inputField(_ placeholder: LocalizedStringKey, text: Binding<String>, multiline: Bool = false) -> some View {
         Group {
             if multiline {
                 TextField(placeholder, text: text, axis: .vertical).lineLimit(2...4)
@@ -110,7 +110,7 @@ struct PetRegistrationFormView: View {
         let isMissing = showErrors && form.missingFields.contains(field)
         return VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 4) {
-                Text(field.rawValue)
+                Text(field.title)
                     .font(AppTheme.Typography.headline)
                     .foregroundStyle(AppTheme.text)
                 if field.isRequired {

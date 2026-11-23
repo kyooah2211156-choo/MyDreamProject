@@ -10,11 +10,11 @@ enum AccountStatus: String, Codable, Hashable {
 
     var displayName: String {
         switch self {
-        case .pending: "승인 대기"
-        case .active: "이용 중"
-        case .rejected: "반려됨"
-        case .resigned: "퇴사"
-        case .suspended: "이용 중단"
+        case .pending: String(localized: "승인 대기")
+        case .active: String(localized: "이용 중")
+        case .rejected: String(localized: "반려됨")
+        case .resigned: String(localized: "퇴사")
+        case .suspended: String(localized: "이용 중단")
         }
     }
 }

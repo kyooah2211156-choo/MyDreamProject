@@ -76,15 +76,13 @@ struct StaffManagementView: View {
                 Text(invite.code)
                     .font(.system(.title2, design: .monospaced).weight(.bold))
                     .foregroundStyle(invite.isUsed ? AppTheme.subText : AppTheme.text)
-                Text(invite.isUsed
-                     ? "사용됨 · \(accounts.staff.first { $0.id == invite.usedByID }?.name ?? "선생님")"
-                     : "사용 가능")
+                Text(inviteStatusText(invite))
                     .font(AppTheme.Typography.caption)
                     .foregroundStyle(invite.isUsed ? AppTheme.subText : AppTheme.statusApproved)
             }
             Spacer()
             if !invite.isUsed {
-                ShareLink(item: "댕답개 배우개 선생님 초대 코드: \(invite.code)") {
+                ShareLink(item: String(localized: "댕답개 배우개 선생님 초대 코드: \(invite.code)")) {
                     Image(systemName: "square.and.arrow.up")
                         .frame(width: 44, height: 44)
                 }
@@ -113,7 +111,14 @@ struct StaffManagementView: View {
         .background(AppTheme.card, in: RoundedRectangle(cornerRadius: 16))
     }
 
-    private func sectionTitle(_ title: String) -> some View {
+    /// 초대 코드 상태 글자 (사용됨 · 이름 / 사용 가능)
+    private func inviteStatusText(_ invite: StaffInvite) -> String {
+        guard invite.isUsed else { return String(localized: "사용 가능") }
+        let usedName = accounts.staff.first { $0.id == invite.usedByID }?.name ?? String(localized: "선생님")
+        return String(localized: "사용됨 · \(usedName)")
+    }
+
+    private func sectionTitle(_ title: LocalizedStringKey) -> some View {
         Text(title)
             .font(AppTheme.Typography.headline)
             .foregroundStyle(AppTheme.text)

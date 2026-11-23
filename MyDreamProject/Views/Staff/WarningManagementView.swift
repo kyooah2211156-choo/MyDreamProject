@@ -59,8 +59,8 @@ struct WarningManagementView: View {
             Button("경고 기록", role: .destructive) { addWarning(parent) }
         } message: { parent in
             Text(parent.warningCount + 1 >= limit
-                 ? "\(parent.name)님은 경고 \(limit)회가 되어 이용이 바로 중단돼요."
-                 : "\(parent.name)님의 경고가 \(parent.warningCount + 1)회가 돼요.")
+                 ? String(localized: "\(parent.name)님은 경고 \(limit)회가 되어 이용이 바로 중단돼요.")
+                 : String(localized: "\(parent.name)님의 경고가 \(parent.warningCount + 1)회가 돼요."))
         }
     }
 
@@ -75,7 +75,7 @@ struct WarningManagementView: View {
                 Spacer()
             }
             if !petNames.isEmpty {
-                Text("반려견 " + petNames.joined(separator: ", "))
+                Text("반려견 \(petNames.joined(separator: ", "))")
                     .font(AppTheme.Typography.caption)
                     .foregroundStyle(AppTheme.subText)
             }
@@ -111,11 +111,11 @@ struct WarningManagementView: View {
         accounts.addWarning(userID: parent.id)
         guard let updated = accounts.parent(id: parent.id) else { return }
         if updated.status == .suspended {
-            notifications.send(to: parent.id, title: "이용이 중단됐어요",
-                               content: "운영규칙 경고가 \(limit)회 쌓여 이용이 중단됐어요. 원장님께 문의해 주세요.")
+            notifications.send(to: parent.id, title: String(localized: "이용이 중단됐어요"),
+                               content: String(localized: "운영규칙 경고가 \(limit)회 쌓여 이용이 중단됐어요. 원장님께 문의해 주세요."))
         } else {
-            notifications.send(to: parent.id, title: "운영규칙 경고 \(updated.warningCount)/\(limit)",
-                               content: "경고가 \(updated.warningCount)회 기록됐어요. \(limit)회가 되면 이용이 중단돼요.")
+            notifications.send(to: parent.id, title: String(localized: "운영규칙 경고 \(updated.warningCount)/\(limit)"),
+                               content: String(localized: "경고가 \(updated.warningCount)회 기록됐어요. \(limit)회가 되면 이용이 중단돼요."))
         }
     }
 

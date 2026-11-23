@@ -82,7 +82,7 @@ struct NotebookListView: View {
 }
 
 private struct FeedBadge: View {
-    let title: String
+    let title: LocalizedStringKey
     let color: Color
 
     var body: some View {

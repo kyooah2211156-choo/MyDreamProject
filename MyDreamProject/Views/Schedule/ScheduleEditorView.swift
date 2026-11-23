@@ -108,7 +108,7 @@ struct ScheduleEditorView: View {
             }
             .scrollContentBackground(.hidden)
             .background(AppTheme.background.ignoresSafeArea())
-            .navigationTitle(existingEvent == nil ? "일정 추가" : "일정 수정")
+            .navigationTitle(existingEvent == nil ? String(localized: "일정 추가") : String(localized: "일정 수정"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("취소") { dismiss() } }

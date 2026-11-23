@@ -31,7 +31,7 @@ final class NotebookStore {
     func notice(id: String) -> Notice? { notices.first { $0.id == id } }
 
     func authorName(_ userID: String) -> String {
-        users.first { $0.id == userID }?.name ?? "알 수 없음"
+        users.first { $0.id == userID }?.name ?? String(localized: "알 수 없음")
     }
 
     func petNames(for post: Post) -> [String] {

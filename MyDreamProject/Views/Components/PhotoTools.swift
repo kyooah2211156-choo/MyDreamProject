@@ -54,11 +54,11 @@ enum PhotoSaver {
     static func save(_ sources: [PhotoSource]) async -> String {
         // Info 설정에 안내 문구가 없으면 앱이 꺼질 수 있어서 먼저 확인합니다.
         guard Bundle.main.object(forInfoDictionaryKey: "NSPhotoLibraryAddUsageDescription") != nil else {
-            return "사진 저장 권한 안내 문구가 아직 설정되지 않았어요. (프로젝트 설정 필요)"
+            return String(localized: "사진 저장 권한 안내 문구가 아직 설정되지 않았어요. (프로젝트 설정 필요)")
         }
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
         guard status == .authorized || status == .limited else {
-            return "사진 저장 권한이 꺼져 있어요. 설정 앱에서 허용해 주세요."
+            return String(localized: "사진 저장 권한이 꺼져 있어요. 설정 앱에서 허용해 주세요.")
         }
 
         var images: [UIImage] = []
@@ -71,7 +71,7 @@ enum PhotoSaver {
             }
         }
         let total = images.count + videoURLs.count
-        guard total > 0 else { return "저장할 사진을 불러오지 못했어요." }
+        guard total > 0 else { return String(localized: "저장할 사진을 불러오지 못했어요.") }
 
         do {
             try await PHPhotoLibrary.shared().performChanges {
@@ -82,9 +82,9 @@ enum PhotoSaver {
                     _ = PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
                 }
             }
-            return "\(total)개를 사진 앱에 저장했어요."
+            return String(localized: "\(total)개를 사진 앱에 저장했어요.")
         } catch {
-            return "저장에 실패했어요. 잠시 후 다시 시도해 주세요."
+            return String(localized: "저장에 실패했어요. 잠시 후 다시 시도해 주세요.")
         }
     }
 }

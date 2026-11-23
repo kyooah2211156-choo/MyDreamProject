@@ -5,9 +5,11 @@
     "Release",
   ],
   "localizations": {
-    "development": "en",
+    "development": "ko",
     "supported": [
       "Base",
+      "ko",
+      "en",
     ],
   },
   "files": [

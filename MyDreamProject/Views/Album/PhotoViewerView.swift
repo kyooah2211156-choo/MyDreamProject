@@ -79,6 +79,16 @@ struct PhotoViewerView: View {
             .accessibilityLabel("닫기")
             Spacer()
             if let current {
+                Button {
+                    Task { resultMessage = await PhotoSaver.save([current.photo.source]) }
+                } label: {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, .black.opacity(0.5))
+                        .font(.title)
+                        .frame(width: 44, height: 44)
+                }
+                .accessibilityLabel("다운로드")
                 Menu {
                     shareButton(current.photo.source)
                     Button("사진 앱에 저장", systemImage: "square.and.arrow.down") {

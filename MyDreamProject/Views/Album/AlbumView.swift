@@ -11,6 +11,7 @@ struct AlbumView: View {
     @State private var viewerStart: ViewerStart?
     @State private var resultMessage: String?
     @State private var isSaving = false
+    @State private var isAdding = false
 
     private struct ViewerStart: Identifiable { let id: String }
 
@@ -45,6 +46,14 @@ struct AlbumView: View {
         .background(AppTheme.background.ignoresSafeArea())
         .navigationTitle("사진첩")
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                if Permissions.canWritePost(user) {
+                    Button { isAdding = true } label: {
+                        Label("사진 추가", systemImage: "plus")
+                    }
+                    .frame(minWidth: 44, minHeight: 44)
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 if !items.isEmpty {
                     Button(isSelecting ? String(localized: "완료") : String(localized: "선택")) {
@@ -57,6 +66,9 @@ struct AlbumView: View {
         }
         .safeAreaInset(edge: .bottom) {
             if isSelecting { selectionBar(chosen) }
+        }
+        .sheet(isPresented: $isAdding) {
+            AlbumPhotoAddView(initialCategory: selectedCategory)
         }
         .fullScreenCover(item: $viewerStart) { start in
             PhotoViewerView(startID: start.id, category: selectedCategory)

@@ -5,6 +5,7 @@ struct ParentHomeView: View {
     @Environment(SessionStore.self) private var session
     @Environment(NotebookStore.self) private var store
     @State private var selectedPetID: String?
+    @State private var showingPolicy = false
 
     private let kindergartenName = UserDefaultsKindergartenNameStore().load() ?? "댕댕이 유치원"
 
@@ -26,6 +27,14 @@ struct ParentHomeView: View {
             VStack(spacing: 0) {
                 hero(user)
                 VStack(alignment: .leading, spacing: AppTheme.Spacing.large) {
+                    Button {
+                        showingPolicy = true
+                    } label: {
+                        Label("운영규칙 보기", systemImage: "checkmark.shield.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(SoftButtonStyle())
+
                     sectionTitle("내 반려견")
                     if pets.isEmpty {
                         infoCard(icon: "pawprint", title: "등록된 반려견이 없어요",
@@ -42,6 +51,7 @@ struct ParentHomeView: View {
         }
         .background(AppTheme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $showingPolicy) { PolicySheetView() }
     }
 
     // MARK: 머리말
@@ -297,12 +307,14 @@ struct PetStatusBadge: View {
     ParentHomeView()
         .environment(SessionStore(currentUser: SampleData.parent))
         .environment(NotebookStore())
+        .environment(AccountStore())
 }
 
 #Preview("보호자 (다크)") {
     ParentHomeView()
         .environment(SessionStore(currentUser: SampleData.parent))
         .environment(NotebookStore())
+        .environment(AccountStore())
         .preferredColorScheme(.dark)
 }
 
@@ -310,4 +322,5 @@ struct PetStatusBadge: View {
     ParentHomeView()
         .environment(SessionStore(currentUser: User(id: "user-new", name: "새보호", role: .parent)))
         .environment(NotebookStore())
+        .environment(AccountStore())
 }

@@ -9,6 +9,8 @@ struct RootView: View {
     @State private var notificationStore = NotificationStore()
     /// 한 달 시간표 데이터
     @State private var scheduleStore = ScheduleStore()
+    /// 원장 승인·선생님 초대·직원 관리 데이터
+    @State private var accountStore = AccountStore()
 
     var body: some View {
         if let user = session.currentUser {
@@ -17,6 +19,7 @@ struct RootView: View {
                 .environment(notebookStore)
                 .environment(notificationStore)
                 .environment(scheduleStore)
+                .environment(accountStore)
         } else {
             LoginView()
                 .environment(notebookStore)
@@ -24,59 +27,83 @@ struct RootView: View {
     }
 }
 
-/// 종 버튼, 달력 버튼으로 여는 창 종류
+/// 종 버튼, 달력 버튼, 직원 버튼으로 여는 창 종류
 private enum SignedInSheet: String, Identifiable {
     case notifications
     case schedule
+    case staff
 
     var id: String { rawValue }
 }
 
-/// 로그인 후 화면: 홈 / 훈련 / 알림장 / 사진첩 탭 (원장·선생님은 승인 탭 추가)
+/// 로그인 후 화면
+/// - 운영자: 원장 가입 승인 화면만 보입니다. (유치원 안의 정보는 볼 수 없어요)
+/// - 그 외: 홈 / 훈련 / 알림장 / 사진첩 탭 (원장·선생님은 승인 탭 추가)
 private struct SignedInView: View {
     @Environment(SessionStore.self) private var session
     @Environment(NotebookStore.self) private var store
     @Environment(NotificationStore.self) private var notifications
+    @Environment(\.scenePhase) private var scenePhase
     @State private var activeSheet: SignedInSheet?
     let user: User
 
     var body: some View {
         VStack(spacing: 0) {
             userBar
-            TabView {
-                home
-                    .tabItem { Label("홈", systemImage: "house.fill") }
-                TrainingListView()
-                    .tabItem { Label("훈련", systemImage: "figure.walk") }
-                NotebookListView()
-                    .tabItem { Label("알림장", systemImage: "book.closed.fill") }
-                AlbumView()
-                    .tabItem { Label("사진첩", systemImage: "photo.on.rectangle.angled") }
-                if Permissions.canReviewPets(user) {
-                    PetApprovalView()
-                        .tabItem { Label("승인", systemImage: "checkmark.seal.fill") }
-                        .badge(store.pendingPets.count)
+            if user.role == .admin {
+                OwnerApprovalView()
+            } else {
+                TabView {
+                    home
+                        .tabItem { Label("홈", systemImage: "house.fill") }
+                    TrainingListView()
+                        .tabItem { Label("훈련", systemImage: "figure.walk") }
+                    NotebookListView()
+                        .tabItem { Label("알림장", systemImage: "book.closed.fill") }
+                    AlbumView()
+                        .tabItem { Label("사진첩", systemImage: "photo.on.rectangle.angled") }
+                    if Permissions.canReviewPets(user) {
+                        PetApprovalView()
+                            .tabItem { Label("승인", systemImage: "checkmark.seal.fill") }
+                            .badge(store.pendingPets.count)
+                    }
                 }
+                .tint(AppTheme.softButtonText)
             }
-            .tint(AppTheme.softButtonText)
         }
         .background(AppTheme.background.ignoresSafeArea())
+        // 퇴사 처리나 이용 중단이 되면 몇 초 안에 바로 로그아웃됩니다.
+        .task(id: user.id) {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(3))
+                session.validateSession()
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { session.validateSession() }
+        }
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
             case .notifications: NotificationListView()
             case .schedule: ScheduleView()
+            case .staff: StaffManagementView()
             }
         }
     }
 
     private var userBar: some View {
-        HStack {
+        HStack(spacing: 0) {
             Text("\(user.name) · \(user.role.displayName)")
                 .font(AppTheme.Typography.headline)
                 .foregroundStyle(AppTheme.text)
             Spacer()
-            scheduleButton
-            notificationButton
+            if Permissions.canManageStaff(user) {
+                iconButton("person.2.fill", label: "직원 관리") { activeSheet = .staff }
+            }
+            if user.role != .admin {
+                iconButton("calendar", label: "한 달 시간표") { activeSheet = .schedule }
+                notificationButton
+            }
             Button("로그아웃") { session.logout() }
                 .font(AppTheme.Typography.caption)
                 .foregroundStyle(AppTheme.softButtonText)
@@ -86,16 +113,13 @@ private struct SignedInView: View {
         .background(AppTheme.card)
     }
 
-    /// 달력 모양 버튼. 한 달 시간표를 엽니다.
-    private var scheduleButton: some View {
-        Button {
-            activeSheet = .schedule
-        } label: {
-            Image(systemName: "calendar")
+    private func iconButton(_ symbol: String, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
                 .foregroundStyle(AppTheme.softButtonText)
                 .frame(width: 44, height: 44)
         }
-        .accessibilityLabel("한 달 시간표")
+        .accessibilityLabel(label)
     }
 
     /// 종 모양 버튼. 안 읽은 알림 개수가 빨간 배지로 보여요.
@@ -126,11 +150,13 @@ private struct SignedInView: View {
     private var home: some View {
         switch user.role {
         case .owner:
-            TeacherHomeView(viewModel: .live, canEditKindergartenName: true)
+            TeacherHomeView(viewModel: .live, canEditKindergartenName: true, canManageWarnings: true)
         case .teacher:
             TeacherHomeView(viewModel: .live, canEditKindergartenName: false)
         case .parent:
             ParentHomeView()
+        case .admin:
+            EmptyView()
         }
     }
 }
@@ -145,6 +171,10 @@ private struct SignedInView: View {
 
 #Preview("선생님") {
     RootView().environment(SessionStore(currentUser: SampleData.teacher))
+}
+
+#Preview("운영자") {
+    RootView().environment(SessionStore(currentUser: SampleData.admin))
 }
 
 #Preview("보호자 (다크)") {

@@ -8,10 +8,13 @@ struct TeacherHomeView: View {
 
     /// 유치원 이름 수정 버튼을 보여줄지 (원장만 true)
     private let canEditKindergartenName: Bool
+    /// 보호자 경고 관리 카드를 보여줄지 (원장만 true)
+    private let canManageWarnings: Bool
 
-    init(viewModel: TeacherHomeViewModel, canEditKindergartenName: Bool = true) {
+    init(viewModel: TeacherHomeViewModel, canEditKindergartenName: Bool = true, canManageWarnings: Bool = false) {
         _viewModel = State(initialValue: viewModel)
         self.canEditKindergartenName = canEditKindergartenName
+        self.canManageWarnings = canManageWarnings
     }
 
     var body: some View {
@@ -25,6 +28,10 @@ struct TeacherHomeView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
+                    if canManageWarnings {
+                        WarningEntryCard()
+                    }
+
                     sectionTitle("현재 등원한 강아지", count: viewModel.presentDogs.count)
                     if viewModel.presentDogs.isEmpty {
                         emptyText("아직 등원한 강아지가 없어요")
@@ -223,8 +230,55 @@ struct TeacherHomeView: View {
     }
 }
 
+/// 원장 홈의 "보호자 경고 관리" 카드. 누르면 경고를 세는 화면이 열려요.
+private struct WarningEntryCard: View {
+    @Environment(AccountStore.self) private var accounts
+    @State private var showing = false
+
+    var body: some View {
+        let warned = accounts.parents.filter { $0.warningCount > 0 && $0.status == .active }.count
+        let suspended = accounts.parents.filter { $0.status == .suspended }.count
+        return Button {
+            showing = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.title2)
+                    .foregroundStyle(AppTheme.statusPending)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("보호자 경고 관리")
+                        .font(AppTheme.Typography.headline)
+                        .foregroundStyle(AppTheme.text)
+                    Text("경고 중 \(warned)명 · 이용 중단 \(suspended)명")
+                        .font(AppTheme.Typography.caption)
+                        .foregroundStyle(AppTheme.subText)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").foregroundStyle(AppTheme.subText)
+            }
+            .padding(14)
+            .frame(minHeight: 44)
+            .background(AppTheme.card, in: RoundedRectangle(cornerRadius: AppTheme.Radius.card))
+            .shadow(color: AppTheme.cardShadow, radius: 8, y: 4)
+        }
+        .buttonStyle(.plain)
+        .onAppear { accounts.reloadParents() }
+        .sheet(isPresented: $showing, onDismiss: { accounts.reloadParents() }) {
+            WarningManagementView()
+        }
+    }
+}
+
 #Preview("라이트") {
     TeacherHomeView(viewModel: .sample)
+}
+
+#Preview("원장 (경고 관리 포함)") {
+    TeacherHomeView(viewModel: .sample, canManageWarnings: true)
+        .environment(AccountStore())
+        .environment(NotebookStore())
+        .environment(NotificationStore())
+        .environment(SessionStore(currentUser: SampleData.owner))
 }
 
 #Preview("선생님용 (이름 수정 불가)") {

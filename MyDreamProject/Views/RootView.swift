@@ -11,6 +11,8 @@ struct RootView: View {
     @State private var scheduleStore = ScheduleStore()
     /// 원장 승인·선생님 초대·직원 관리 데이터
     @State private var accountStore = AccountStore()
+    /// 건강 기록(응가·몸무게·식사량) 데이터
+    @State private var healthStore = HealthRecordStore()
 
     var body: some View {
         if let user = session.currentUser {
@@ -20,6 +22,7 @@ struct RootView: View {
                 .environment(notificationStore)
                 .environment(scheduleStore)
                 .environment(accountStore)
+                .environment(healthStore)
         } else {
             LoginView()
                 .environment(notebookStore)
@@ -113,7 +116,7 @@ private struct SignedInView: View {
         .background(AppTheme.card)
     }
 
-    private func iconButton(_ symbol: String, label: String, action: @escaping () -> Void) -> some View {
+    private func iconButton(_ symbol: String, label: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
                 .foregroundStyle(AppTheme.softButtonText)
@@ -143,16 +146,18 @@ private struct SignedInView: View {
                     }
                 }
         }
-        .accessibilityLabel(unread > 0 ? "알림 \(unread)개 안 읽음" : "알림")
+        .accessibilityLabel(unread > 0 ? String(localized: "알림 \(unread)개 안 읽음") : String(localized: "알림"))
     }
 
     @ViewBuilder
     private var home: some View {
         switch user.role {
         case .owner:
-            TeacherHomeView(viewModel: .live, canEditKindergartenName: true, canManageWarnings: true)
+            TeacherHomeView(viewModel: .live, canEditKindergartenName: true, canManageWarnings: true,
+                            showsHealthRecords: true, pets: store.pets.filter(\.isApproved))
         case .teacher:
-            TeacherHomeView(viewModel: .live, canEditKindergartenName: false)
+            TeacherHomeView(viewModel: .live, canEditKindergartenName: false, showsHealthRecords: true,
+                            pets: store.pets.filter(\.isApproved))
         case .parent:
             ParentHomeView()
         case .admin:

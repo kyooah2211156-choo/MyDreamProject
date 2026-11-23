@@ -5,69 +5,123 @@ struct TeacherHomeView: View {
     @State private var viewModel: TeacherHomeViewModel
     @State private var isEditingName = false
     @State private var nameDraft = ""
+    @State private var healthTarget: HealthTarget?
+
+    private struct HealthTarget: Identifiable {
+        let id: String   // 반려견 id
+    }
 
     /// 유치원 이름 수정 버튼을 보여줄지 (원장만 true)
     private let canEditKindergartenName: Bool
     /// 보호자 경고 관리 카드를 보여줄지 (원장만 true)
     private let canManageWarnings: Bool
+    /// 건강 기록(응가·몸무게·식사량) 카드를 보여줄지 (원장·선생님만 true)
+    private let showsHealthRecords: Bool
+    /// 승인된 반려견 목록. 넘겨주면 등원 목록이 이 반려견들과 이어져요.
+    private let pets: [Pet]?
 
-    init(viewModel: TeacherHomeViewModel, canEditKindergartenName: Bool = true, canManageWarnings: Bool = false) {
+    init(viewModel: TeacherHomeViewModel, canEditKindergartenName: Bool = true, canManageWarnings: Bool = false,
+         showsHealthRecords: Bool = false,
+         pets: [Pet]? = nil) {
         _viewModel = State(initialValue: viewModel)
         self.canEditKindergartenName = canEditKindergartenName
         self.canManageWarnings = canManageWarnings
+        self.showsHealthRecords = showsHealthRecords
+        self.pets = pets
     }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // 머리말과 요약 카드를 살짝 겹쳐서 보여줌
-                VStack(spacing: -30) {
-                    hero
-                    summaryCard
-                        .padding(.horizontal, 16)
-                }
-
-                VStack(alignment: .leading, spacing: 12) {
-                    if canManageWarnings {
-                        WarningEntryCard()
-                    }
-
-                    sectionTitle("현재 등원한 강아지", count: viewModel.presentDogs.count)
-                    if viewModel.presentDogs.isEmpty {
-                        emptyText("아직 등원한 강아지가 없어요")
-                    } else {
-                        ForEach(viewModel.presentDogs) { dog in
-                            presentRow(dog)
-                        }
-                    }
-
-                    sectionTitle("등원 대기", count: viewModel.expectedDogs.count)
-                        .padding(.top, 8)
-                    if viewModel.expectedDogs.isEmpty {
-                        emptyText("대기 중인 강아지가 없어요")
-                    } else {
-                        ForEach(viewModel.expectedDogs) { dog in
-                            expectedRow(dog)
-                        }
-                    }
-                }
-                .padding(16)
-                .padding(.top, 4)
+                headerSection
+                listSection
             }
         }
         .background(AppTheme.background.ignoresSafeArea())
+        // 승인된 반려견이 바뀌면 등원 목록도 함께 맞춥니다.
+        .onChange(of: pets, initial: true) { _, newPets in
+            syncDogs(with: newPets)
+        }
+        .sheet(item: $healthTarget) { target in
+            PetHealthLogView(petID: target.id)
+        }
         .alert(
             "알림장 작성",
-            isPresented: Binding(
-                get: { viewModel.dogForNotebook != nil },
-                set: { if !$0 { viewModel.dogForNotebook = nil } }
-            ),
+            isPresented: notebookAlertShown,
             presenting: viewModel.dogForNotebook
         ) { _ in
             Button("확인", role: .cancel) {}
         } message: { dog in
             Text("\(dog.name)의 알림장 작성 화면은 다음 단계에서 만들어요.")
         }
+    }
+
+    // MARK: - 화면 조각
+
+    /// 머리말과 요약 카드를 살짝 겹쳐서 보여줌
+    private var headerSection: some View {
+        VStack(spacing: -30) {
+            hero
+            summaryCard
+                .padding(.horizontal, 16)
+        }
+    }
+
+    private var listSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            extraCards
+            presentSection
+            expectedSection
+        }
+        .padding(16)
+        .padding(.top, 4)
+    }
+
+    /// 원장·선생님에게만 보이는 카드 (경고 관리, 건강 기록)
+    @ViewBuilder
+    private var extraCards: some View {
+        if canManageWarnings {
+            WarningEntryCard()
+        }
+        if showsHealthRecords {
+            HealthRecordsCard(petIDs: nil, canEdit: true)
+        }
+    }
+
+    @ViewBuilder
+    private var presentSection: some View {
+        sectionTitle("현재 등원한 강아지", count: viewModel.presentDogs.count)
+        if viewModel.presentDogs.isEmpty {
+            emptyText("아직 등원한 강아지가 없어요")
+        } else {
+            ForEach(viewModel.presentDogs) { dog in
+                presentRow(dog)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var expectedSection: some View {
+        sectionTitle("등원 대기", count: viewModel.expectedDogs.count)
+            .padding(.top, 8)
+        if viewModel.expectedDogs.isEmpty {
+            emptyText("대기 중인 강아지가 없어요")
+        } else {
+            ForEach(viewModel.expectedDogs) { dog in
+                expectedRow(dog)
+            }
+        }
+    }
+
+    private var notebookAlertShown: Binding<Bool> {
+        Binding(
+            get: { viewModel.dogForNotebook != nil },
+            set: { if !$0 { viewModel.dogForNotebook = nil } }
+        )
+    }
+
+    private func syncDogs(with newPets: [Pet]?) {
+        if let newPets { viewModel.sync(with: newPets) }
     }
 
     // MARK: - 머리말
@@ -152,7 +206,7 @@ struct TeacherHomeView: View {
 
     // MARK: - 목록
 
-    private func sectionTitle(_ title: String, count: Int) -> some View {
+    private func sectionTitle(_ title: LocalizedStringKey, count: Int) -> some View {
         HStack(spacing: 6) {
             Text(title).font(.headline).foregroundStyle(AppTheme.text)
             Text("\(count)").font(.subheadline.weight(.bold)).foregroundStyle(AppTheme.subText)
@@ -160,7 +214,7 @@ struct TeacherHomeView: View {
         .padding(.horizontal, 4)
     }
 
-    private func emptyText(_ text: String) -> some View {
+    private func emptyText(_ text: LocalizedStringKey) -> some View {
         Text(text)
             .font(.subheadline)
             .foregroundStyle(AppTheme.subText)
@@ -168,7 +222,23 @@ struct TeacherHomeView: View {
             .background(AppTheme.card, in: RoundedRectangle(cornerRadius: 22))
     }
 
-    private func dogInfo(_ dog: Dog, detail: String) -> some View {
+    /// 건강 기록을 쓸 수 있는 강아지는 이름 쪽을 누르면 그 아이의 건강 기록 화면이 열려요.
+    @ViewBuilder
+    private func dogHeader(_ dog: Dog, detail: String) -> some View {
+        if showsHealthRecords, let petID = dog.petID {
+            Button {
+                healthTarget = HealthTarget(id: petID)
+            } label: {
+                dogInfo(dog, detail: detail, showsHealthHint: true)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("건강 기록 열기")
+        } else {
+            dogInfo(dog, detail: detail)
+        }
+    }
+
+    private func dogInfo(_ dog: Dog, detail: String, showsHealthHint: Bool = false) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "dog.fill")
                 .font(.title3)
@@ -184,16 +254,22 @@ struct TeacherHomeView: View {
                     .foregroundStyle(AppTheme.subText)
             }
             Spacer(minLength: 0)
+            if showsHealthHint {
+                Image(systemName: "heart.text.square.fill")
+                    .foregroundStyle(AppTheme.softButtonText)
+                    .accessibilityHidden(true)
+            }
         }
     }
 
     private func presentRow(_ dog: Dog) -> some View {
         var detail = dog.breed
         if let time = dog.checkInTime {
-            detail += " · \(time.formatted(date: .omitted, time: .shortened)) 등원"
+            let timeText = time.formatted(date: .omitted, time: .shortened)
+            detail = String(localized: "\(dog.breed) · \(timeText) 등원")
         }
         return VStack(spacing: 12) {
-            dogInfo(dog, detail: detail)
+            dogHeader(dog, detail: detail)
             HStack(spacing: 10) {
                 Button {
                     viewModel.dogForNotebook = dog
@@ -217,7 +293,7 @@ struct TeacherHomeView: View {
 
     private func expectedRow(_ dog: Dog) -> some View {
         HStack(spacing: 10) {
-            dogInfo(dog, detail: dog.breed)
+            dogHeader(dog, detail: dog.breed)
             Button("등원") {
                 viewModel.checkIn(dog)
             }
@@ -235,37 +311,47 @@ private struct WarningEntryCard: View {
     @Environment(AccountStore.self) private var accounts
     @State private var showing = false
 
+    private var warnedCount: Int {
+        accounts.parents.filter { $0.warningCount > 0 && $0.status == .active }.count
+    }
+
+    private var suspendedCount: Int {
+        accounts.parents.filter { $0.status == .suspended }.count
+    }
+
     var body: some View {
-        let warned = accounts.parents.filter { $0.warningCount > 0 && $0.status == .active }.count
-        let suspended = accounts.parents.filter { $0.status == .suspended }.count
-        return Button {
+        Button {
             showing = true
         } label: {
-            HStack(spacing: 12) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.title2)
-                    .foregroundStyle(AppTheme.statusPending)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("보호자 경고 관리")
-                        .font(AppTheme.Typography.headline)
-                        .foregroundStyle(AppTheme.text)
-                    Text("경고 중 \(warned)명 · 이용 중단 \(suspended)명")
-                        .font(AppTheme.Typography.caption)
-                        .foregroundStyle(AppTheme.subText)
-                }
-                Spacer()
-                Image(systemName: "chevron.right").foregroundStyle(AppTheme.subText)
-            }
-            .padding(14)
-            .frame(minHeight: 44)
-            .background(AppTheme.card, in: RoundedRectangle(cornerRadius: AppTheme.Radius.card))
-            .shadow(color: AppTheme.cardShadow, radius: 8, y: 4)
+            label
         }
         .buttonStyle(.plain)
         .onAppear { accounts.reloadParents() }
         .sheet(isPresented: $showing, onDismiss: { accounts.reloadParents() }) {
             WarningManagementView()
         }
+    }
+
+    private var label: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.title2)
+                .foregroundStyle(AppTheme.statusPending)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("보호자 경고 관리")
+                    .font(AppTheme.Typography.headline)
+                    .foregroundStyle(AppTheme.text)
+                Text("경고 중 \(warnedCount)명 · 이용 중단 \(suspendedCount)명")
+                    .font(AppTheme.Typography.caption)
+                    .foregroundStyle(AppTheme.subText)
+            }
+            Spacer()
+            Image(systemName: "chevron.right").foregroundStyle(AppTheme.subText)
+        }
+        .padding(14)
+        .frame(minHeight: 44)
+        .background(AppTheme.card, in: RoundedRectangle(cornerRadius: AppTheme.Radius.card))
+        .shadow(color: AppTheme.cardShadow, radius: 8, y: 4)
     }
 }
 

@@ -37,6 +37,19 @@ final class TeacherHomeViewModel {
     var expectedDogs: [Dog] { dogs.filter { $0.status == .expected } }
     var presentDogs: [Dog] { dogs.filter { $0.status == .present } }
 
+    /// 승인된 반려견과 등원 목록을 맞춥니다.
+    /// 새로 승인된 반려견은 '등원 예정'으로 추가하고, 이름·견종은 최신으로 고칩니다.
+    func sync(with pets: [Pet]) {
+        for pet in pets where pet.isApproved {
+            if let index = dogs.firstIndex(where: { $0.petID == pet.id }) {
+                dogs[index].name = pet.name
+                dogs[index].breed = pet.breed
+            } else {
+                dogs.append(Dog(name: pet.name, breed: pet.breed, petID: pet.id))
+            }
+        }
+    }
+
     func checkIn(_ dog: Dog) {
         guard let i = dogs.firstIndex(where: { $0.id == dog.id }),
               dogs[i].status == .expected else { return }

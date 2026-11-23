@@ -30,15 +30,15 @@ struct ParentHomeView: View {
                     Button {
                         showingPolicy = true
                     } label: {
-                        Label("운영규칙 보기", systemImage: "checkmark.shield.fill")
+                        Label("운영규칙 · 개인정보 보기", systemImage: "checkmark.shield.fill")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(SoftButtonStyle())
 
                     sectionTitle("내 반려견")
                     if pets.isEmpty {
-                        infoCard(icon: "pawprint", title: "등록된 반려견이 없어요",
-                                 message: "반려견 등록 신청은 다음 단계에서 만들어요.", color: AppTheme.subText)
+                        infoCard(icon: "pawprint", title: String(localized: "등록된 반려견이 없어요"),
+                                 message: String(localized: "반려견 등록 신청은 다음 단계에서 만들어요."), color: AppTheme.subText)
                     } else {
                         petCarousel(pets, selected: selected)
                     }
@@ -150,12 +150,12 @@ struct ParentHomeView: View {
         case .approved:
             approvedContent(pet, user: user)
         case .pending:
-            infoCard(icon: "hourglass", title: "승인을 기다리는 중이에요",
-                     message: "원장님이나 선생님이 확인하면 \(pet.name)의 알림장과 사진을 볼 수 있어요.",
+            infoCard(icon: "hourglass", title: String(localized: "승인을 기다리는 중이에요"),
+                     message: String(localized: "원장님이나 선생님이 확인하면 \(pet.name)의 알림장과 사진을 볼 수 있어요."),
                      color: AppTheme.statusPending)
         case .rejected:
-            infoCard(icon: "exclamationmark.triangle.fill", title: "등록이 반려됐어요",
-                     message: pet.rejectionReason ?? "반려 사유가 적혀 있지 않아요.",
+            infoCard(icon: "exclamationmark.triangle.fill", title: String(localized: "등록이 반려됐어요"),
+                     message: pet.rejectionReason ?? String(localized: "반려 사유가 적혀 있지 않아요."),
                      color: AppTheme.statusRejected)
         }
     }
@@ -168,6 +168,8 @@ struct ParentHomeView: View {
         let notices = store.notices.sorted { $0.date > $1.date }.prefix(2)
 
         return VStack(alignment: .leading, spacing: AppTheme.Spacing.large) {
+            HealthRecordsCard(petIDs: [pet.id], canEdit: false)
+
             sectionTitle("\(pet.name)의 최근 사진")
             if photos.isEmpty {
                 emptyText("아직 올라온 사진이 없어요")
@@ -250,13 +252,13 @@ struct ParentHomeView: View {
 
     // MARK: 작은 조각들
 
-    private func sectionTitle(_ title: String) -> some View {
+    private func sectionTitle(_ title: LocalizedStringKey) -> some View {
         Text(title)
             .font(AppTheme.Typography.headline)
             .foregroundStyle(AppTheme.text)
     }
 
-    private func emptyText(_ text: String) -> some View {
+    private func emptyText(_ text: LocalizedStringKey) -> some View {
         Text(text)
             .font(AppTheme.Typography.body)
             .foregroundStyle(AppTheme.subText)
@@ -308,6 +310,7 @@ struct PetStatusBadge: View {
         .environment(SessionStore(currentUser: SampleData.parent))
         .environment(NotebookStore())
         .environment(AccountStore())
+        .environment(HealthRecordStore())
 }
 
 #Preview("보호자 (다크)") {
@@ -315,6 +318,7 @@ struct PetStatusBadge: View {
         .environment(SessionStore(currentUser: SampleData.parent))
         .environment(NotebookStore())
         .environment(AccountStore())
+        .environment(HealthRecordStore())
         .preferredColorScheme(.dark)
 }
 
@@ -323,4 +327,5 @@ struct PetStatusBadge: View {
         .environment(SessionStore(currentUser: User(id: "user-new", name: "새보호", role: .parent)))
         .environment(NotebookStore())
         .environment(AccountStore())
+        .environment(HealthRecordStore())
 }

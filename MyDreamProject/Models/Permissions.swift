@@ -27,6 +27,9 @@ enum Permissions {
     /// 원장 가입 승인/반려: 서비스 운영자만
     static func canApproveOwners(_ user: User) -> Bool { user.role == .admin }
 
+    /// 건강 기록(응가·몸무게·식사량) 입력/수정/삭제: 원장, 선생님 (보호자는 내 반려견 기록 보기만)
+    static func canEditHealthRecords(_ user: User) -> Bool { user.role == .owner || user.role == .teacher }
+
     /// 시간표 일정 추가/수정/삭제: 원장만 (선생님·보호자는 보기만)
     static func canEditSchedule(_ user: User) -> Bool { user.role == .owner }
 

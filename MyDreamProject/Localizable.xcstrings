@@ -2255,6 +2255,29 @@
         }
       }
     },
+    "대기 중인 신청이 없어요 😢" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No pending requests 😢"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待機中の申請はありません 😢"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không có yêu cầu nào đang chờ 😢"
+          }
+        }
+      }
+    },
     "대기 중인 신청이 없어요 🎉" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5342,6 +5365,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Duyệt"
+          }
+        }
+      }
+    },
+    "승인 완료" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approved"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "承認完了"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã duyệt xong"
           }
         }
       }

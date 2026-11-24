@@ -21,7 +21,8 @@ struct PostEditorView: View {
     @State private var selectedPetID: String?
     @State private var healthInput = HealthInputState()
     @State private var didLoadHealth = false
-    @State private var category: PostCategory
+    /// 분류는 고르지 않아요. 새 글은 자유시간으로 저장하고, 고칠 때는 원래 분류를 그대로 둡니다.
+    private let category: PostCategory
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var isLoadingPhotos = false
     @State private var errorMessage: String?
@@ -38,7 +39,7 @@ struct PostEditorView: View {
             _text = State(initialValue: post.text)
             _photos = State(initialValue: post.photos)
             _selectedPetID = State(initialValue: post.taggedPetIDs.count == 1 ? post.taggedPetIDs.first : nil)
-            _category = State(initialValue: post.category)
+            category = post.category
             fixedPetID = post.taggedPetIDs.count == 1 ? post.taggedPetIDs.first : nil
             originalTags = post.taggedPetIDs
         } else {
@@ -46,7 +47,7 @@ struct PostEditorView: View {
             _photos = State(initialValue: [])
             let single = initialTaggedPetIDs.count == 1 ? initialTaggedPetIDs.first : nil
             _selectedPetID = State(initialValue: single)
-            _category = State(initialValue: .program)
+            category = .freeTime
             fixedPetID = single
             originalTags = []
         }
@@ -71,11 +72,6 @@ struct PostEditorView: View {
         return isLegacyGroupPost || petID != nil
     }
 
-    /// 글을 쓸 때 고를 수 있는 분류 (영상은 새 글에서 빼요. 이미 영상인 글을 고칠 때는 그대로 보여요)
-    private var availableCategories: [PostCategory] {
-        isEditing ? PostCategory.allCases : [.program, .freeTime]
-    }
-
     private var petName: String? { store.pets.first { $0.id == petID }?.name }
 
     var body: some View {
@@ -83,15 +79,6 @@ struct PostEditorView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppTheme.Spacing.large) {
                     petSection
-
-                    sectionTitle("분류")
-                    Picker("분류", selection: $category) {
-                        ForEach(availableCategories, id: \.self) { category in
-                            Text(category.displayName).tag(category)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .disabled(isEditing)
 
                     sectionTitle("\(mediaName) \(photos.count)/\(Self.maxPhotos)")
                     photoStrip
@@ -130,10 +117,6 @@ struct PostEditorView: View {
                 }
             }
             .task(id: petID) { loadHealthInput() }
-            .onChange(of: category) { _, _ in
-                // 분류를 바꾸면 사진/영상 종류가 달라지므로 고른 것을 비웁니다. (새 글 쓸 때만)
-                if !isEditing { photos = [] }
-            }
             .onChange(of: pickerItems) { _, items in
                 guard !items.isEmpty else { return }
                 Task { await loadPicked(items) }

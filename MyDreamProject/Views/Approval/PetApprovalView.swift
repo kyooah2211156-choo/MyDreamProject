@@ -53,7 +53,7 @@ struct PetApprovalView: View {
                 }
 
                 if !rejected.isEmpty {
-                    sectionTitle("반려", count: rejected.count, isExpanded: $showsRejected)
+                    sectionTitle("반려됨", count: rejected.count, isExpanded: $showsRejected)
                     if showsRejected {
                         ForEach(rejected) { pet in doneRow(pet) }
                     }

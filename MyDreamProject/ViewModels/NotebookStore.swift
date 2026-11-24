@@ -118,6 +118,19 @@ final class NotebookStore {
         return pet
     }
 
+    /// 반려된 반려견을 원장이 직접 고쳐서 바로 승인. 바뀐 반려견을 돌려줍니다. (화면에서 권한을 먼저 확인한 뒤 호출)
+    @discardableResult
+    func approveEditedPet(_ pet: Pet, reviewerID: String) -> Pet? {
+        guard let current = pets.first(where: { $0.id == pet.id }), current.status == .rejected else { return nil }
+        var updated = pet
+        updated.status = .approved
+        updated.rejectionReason = nil
+        updated.reviewerID = reviewerID
+        service.update(pet: updated)
+        reload()
+        return updated
+    }
+
     /// 반려. 사유는 꼭 필요합니다.
     @discardableResult
     func rejectPet(id: String, reviewerID: String, reason: String) -> Pet? {

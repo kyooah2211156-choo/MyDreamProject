@@ -42,6 +42,9 @@ enum Permissions {
     /// 반려견 등록 승인/반려: 원장, 선생님
     static func canReviewPets(_ user: User) -> Bool { user.role == .owner || user.role == .teacher }
 
+    /// 반려된 반려견을 직접 고쳐서 승인: 원장
+    static func canEditAndApprovePets(_ user: User) -> Bool { user.role == .owner }
+
     /// 사진글 보기: 원장·선생님은 전체, 보호자는 "내 승인된 반려견"이 태그된 글만
     static func canView(_ post: Post, by user: User, pets: [Pet]) -> Bool {
         switch user.role {

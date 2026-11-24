@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 /// 반려견 등록 승인 화면 (원장·선생님). 신청 내용을 직접 확인하고 승인하거나 반려합니다.
 struct PetApprovalView: View {
@@ -6,6 +7,7 @@ struct PetApprovalView: View {
     @Environment(NotebookStore.self) private var store
     @Environment(NotificationStore.self) private var notifications
     @State private var rejectingPet: Pet?
+    @State private var editingPet: Pet?
     @State private var showsPending = true
     @State private var showsApproved = false
     @State private var showsRejected = false
@@ -32,7 +34,8 @@ struct PetApprovalView: View {
         let approved = store.pets.filter { $0.status == .approved }
         let rejected = store.pets.filter { $0.status == .rejected }
         return ScrollView {
-            LazyVStack(alignment: .leading, spacing: AppTheme.Spacing.large) {
+            // 목록이 짧고, 승인하면 같은 반려견이 다른 섹션으로 옮겨 가요. LazyVStack은 이때 이전 카드를 재사용해 버튼이 먹통이 될 수 있어 VStack을 씁니다.
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.large) {
                 sectionTitle("승인 대기", count: pending.count, isExpanded: $showsPending)
                 if showsPending {
                     if pending.isEmpty {
@@ -48,14 +51,14 @@ struct PetApprovalView: View {
                 if !approved.isEmpty {
                     sectionTitle("승인 완료", count: approved.count, isExpanded: $showsApproved)
                     if showsApproved {
-                        ForEach(approved) { pet in doneRow(pet) }
+                        ForEach(approved) { pet in doneRow(pet, user: user) }
                     }
                 }
 
                 if !rejected.isEmpty {
                     sectionTitle("반려됨", count: rejected.count, isExpanded: $showsRejected)
                     if showsRejected {
-                        ForEach(rejected) { pet in doneRow(pet) }
+                        ForEach(rejected) { pet in doneRow(pet, user: user) }
                     }
                 }
             }
@@ -65,6 +68,11 @@ struct PetApprovalView: View {
         .sheet(item: $rejectingPet) { pet in
             RejectReasonSheet(petName: pet.name) { reason in
                 reject(pet, reason: reason, by: user)
+            }
+        }
+        .sheet(item: $editingPet) { pet in
+            EditAndApproveSheet(pet: pet) { edited in
+                approveEdited(edited, by: user)
             }
         }
     }
@@ -100,7 +108,7 @@ struct PetApprovalView: View {
         .shadow(color: AppTheme.cardShadow, radius: 8, y: 4)
     }
 
-    private func doneRow(_ pet: Pet) -> some View {
+    private func doneRow(_ pet: Pet, user: User) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text("\(pet.name) · \(pet.breed)")
@@ -116,6 +124,11 @@ struct PetApprovalView: View {
                 Text("반려 사유: \(reason)")
                     .font(AppTheme.Typography.caption)
                     .foregroundStyle(AppTheme.statusRejected)
+            }
+            if pet.status == .rejected, Permissions.canEditAndApprovePets(user) {
+                Button("수정해서 승인") { editingPet = pet }
+                    .buttonStyle(SoftButtonStyle())
+                    .padding(.top, 6)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -155,12 +168,147 @@ struct PetApprovalView: View {
                            content: String(localized: "\(updated.name)의 등록이 승인되었습니다."))
     }
 
+    private func approveEdited(_ pet: Pet, by user: User) {
+        guard Permissions.canEditAndApprovePets(user),
+              let updated = store.approveEditedPet(pet, reviewerID: user.id) else { return }
+        notifications.send(to: updated.requesterID,
+                           title: String(localized: "반려견 등록이 승인됐어요"),
+                           content: String(localized: "\(updated.name)의 등록이 승인되었습니다."))
+    }
+
     private func reject(_ pet: Pet, reason: String, by user: User) {
         guard Permissions.canReviewPets(user),
               let updated = store.rejectPet(id: pet.id, reviewerID: user.id, reason: reason) else { return }
         notifications.send(to: updated.requesterID,
                            title: String(localized: "반려견 등록이 반려됐어요"),
                            content: String(localized: "\(updated.name)의 등록이 반려되었습니다. 사유: \(updated.rejectionReason ?? reason)"))
+    }
+}
+
+/// 반려된 반려견의 정보를 원장이 직접 고친 뒤 바로 승인하는 창
+private struct EditAndApproveSheet: View {
+    let pet: Pet
+    let onApprove: (Pet) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var form: PetFormState
+    @State private var photo: PhotoSource?
+    @State private var pickerItem: PhotosPickerItem?
+    @State private var showErrors = false
+
+    init(pet: Pet, onApprove: @escaping (Pet) -> Void) {
+        self.pet = pet
+        self.onApprove = onApprove
+        _form = State(initialValue: PetFormState(pet: pet))
+        _photo = State(initialValue: pet.profilePhoto)
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.large) {
+                    if let reason = pet.rejectionReason {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("반려 사유")
+                                .font(AppTheme.Typography.caption)
+                                .foregroundStyle(AppTheme.statusRejected)
+                            Text(reason)
+                                .font(AppTheme.Typography.body)
+                                .foregroundStyle(AppTheme.text)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(AppTheme.Spacing.large)
+                        .background(AppTheme.card, in: RoundedRectangle(cornerRadius: AppTheme.Radius.card))
+                    }
+
+                    photoSection
+
+                    PetRegistrationFormView(form: $form, showErrors: showErrors)
+
+                    if showErrors && !form.missingFields.isEmpty {
+                        Text("빠진 항목: \(form.missingFields.map(\.title).joined(separator: ", "))")
+                            .font(AppTheme.Typography.caption)
+                            .foregroundStyle(AppTheme.statusRejected)
+                    }
+
+                    Button("수정하고 승인", action: approve)
+                        .buttonStyle(GradientButtonStyle())
+                }
+                .padding(AppTheme.Spacing.large)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .background(AppTheme.background.ignoresSafeArea())
+            .navigationTitle("수정해서 승인")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
+            }
+            .onChange(of: pickerItem) { _, item in
+                guard let item else { return }
+                Task {
+                    if let data = try? await item.loadTransferable(type: Data.self) {
+                        photo = .data(PhotoRenderer.compressed(data))
+                    }
+                    pickerItem = nil
+                }
+            }
+        }
+    }
+
+    // MARK: 프로필 사진 (선택)
+
+    private var photoSection: some View {
+        HStack(spacing: 14) {
+            Group {
+                if let photo {
+                    PhotoImageView(source: photo)
+                } else {
+                    AppTheme.avatar.overlay {
+                        Image(systemName: "dog.fill")
+                            .font(.title)
+                            .foregroundStyle(AppTheme.softButtonText)
+                    }
+                }
+            }
+            .frame(width: 72, height: 72)
+            .clipShape(Circle())
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("프로필 사진 (선택)")
+                    .font(AppTheme.Typography.headline)
+                    .foregroundStyle(AppTheme.text)
+                HStack(spacing: 8) {
+                    PhotosPicker(selection: $pickerItem, matching: .images) {
+                        Text("사진 선택")
+                            .font(AppTheme.Typography.caption)
+                            .padding(.horizontal, 14)
+                            .frame(minHeight: 44)
+                            .foregroundStyle(AppTheme.softButtonText)
+                            .background(AppTheme.softButton, in: Capsule())
+                    }
+                    if photo != nil {
+                        Button("사진 지우기") { photo = nil }
+                            .font(AppTheme.Typography.caption)
+                            .foregroundStyle(AppTheme.subText)
+                            .frame(minHeight: 44)
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(AppTheme.Spacing.large)
+        .background(AppTheme.card, in: RoundedRectangle(cornerRadius: AppTheme.Radius.card))
+    }
+
+    private func approve() {
+        showErrors = true
+        guard let profile = form.makeProfile() else { return }
+        var edited = pet
+        edited.name = form.trimmedName
+        edited.breed = form.trimmedBreed
+        edited.profilePhoto = photo
+        edited.profile = profile
+        onApprove(edited)
+        dismiss()
     }
 }
 

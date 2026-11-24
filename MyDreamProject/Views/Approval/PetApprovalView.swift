@@ -6,6 +6,9 @@ struct PetApprovalView: View {
     @Environment(NotebookStore.self) private var store
     @Environment(NotificationStore.self) private var notifications
     @State private var rejectingPet: Pet?
+    @State private var showsPending = true
+    @State private var showsApproved = false
+    @State private var showsRejected = false
 
     var body: some View {
         NavigationStack {
@@ -26,22 +29,34 @@ struct PetApprovalView: View {
 
     private func content(_ user: User) -> some View {
         let pending = store.pendingPets
-        let done = store.pets.filter { $0.status != .pending }
+        let approved = store.pets.filter { $0.status == .approved }
+        let rejected = store.pets.filter { $0.status == .rejected }
         return ScrollView {
             LazyVStack(alignment: .leading, spacing: AppTheme.Spacing.large) {
-                sectionTitle("승인 대기 \(pending.count)")
-                if pending.isEmpty {
-                    Text("대기 중인 신청이 없어요 🎉")
-                        .font(AppTheme.Typography.body)
-                        .foregroundStyle(AppTheme.subText)
-                        .frame(maxWidth: .infinity, minHeight: 80)
-                        .background(AppTheme.card, in: RoundedRectangle(cornerRadius: AppTheme.Radius.card))
+                sectionTitle("승인 대기", count: pending.count, isExpanded: $showsPending)
+                if showsPending {
+                    if pending.isEmpty {
+                        Text("대기 중인 신청이 없어요 😢")
+                            .font(AppTheme.Typography.body)
+                            .foregroundStyle(AppTheme.subText)
+                            .frame(maxWidth: .infinity, minHeight: 80)
+                            .background(AppTheme.card, in: RoundedRectangle(cornerRadius: AppTheme.Radius.card))
+                    }
+                    ForEach(pending) { pet in requestCard(pet, user: user) }
                 }
-                ForEach(pending) { pet in requestCard(pet, user: user) }
 
-                if !done.isEmpty {
-                    sectionTitle("처리 완료")
-                    ForEach(done) { pet in doneRow(pet) }
+                if !approved.isEmpty {
+                    sectionTitle("승인 완료", count: approved.count, isExpanded: $showsApproved)
+                    if showsApproved {
+                        ForEach(approved) { pet in doneRow(pet) }
+                    }
+                }
+
+                if !rejected.isEmpty {
+                    sectionTitle("반려", count: rejected.count, isExpanded: $showsRejected)
+                    if showsRejected {
+                        ForEach(rejected) { pet in doneRow(pet) }
+                    }
                 }
             }
             .padding(AppTheme.Spacing.large)
@@ -108,10 +123,26 @@ struct PetApprovalView: View {
         .background(AppTheme.card, in: RoundedRectangle(cornerRadius: 16))
     }
 
-    private func sectionTitle(_ title: LocalizedStringKey) -> some View {
-        Text(title)
-            .font(AppTheme.Typography.headline)
-            .foregroundStyle(AppTheme.text)
+    /// 제목을 누르면 아래 목록이 접히고 펼쳐져요.
+    private func sectionTitle(_ title: LocalizedStringKey, count: Int, isExpanded: Binding<Bool>) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { isExpanded.wrappedValue.toggle() }
+        } label: {
+            HStack(spacing: 6) {
+                Text(title).font(AppTheme.Typography.headline).foregroundStyle(AppTheme.text)
+                Text("\(count)").font(AppTheme.Typography.subheadlineBold).foregroundStyle(AppTheme.subText)
+                Image(systemName: "chevron.down")
+                    .font(AppTheme.Typography.caption)
+                    .foregroundStyle(AppTheme.subText)
+                    .rotationEffect(.degrees(isExpanded.wrappedValue ? 0 : -90))
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 4)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(Text(isExpanded.wrappedValue ? String(localized: "누르면 접어요") : String(localized: "누르면 펼쳐요")))
     }
 
     // MARK: 승인·반려 (처리하면 신청한 보호자에게 앱 안 알림이 갑니다)

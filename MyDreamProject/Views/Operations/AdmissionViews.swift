@@ -124,6 +124,7 @@ struct AdmissionDetailContent: View {
     @Environment(ReservationStore.self) private var reservations
     @Environment(NotificationStore.self) private var notifications
     @State private var pickerItem: PhotosPickerItem?
+    @State private var registrationPickerItem: PhotosPickerItem?
     @State private var numberText = ""
     @State private var didLoadNumber = false
     @State private var trialDate = Calendar.current.date(byAdding: .day, value: 3, to: .now) ?? .now
@@ -174,6 +175,15 @@ struct AdmissionDetailContent: View {
                         admission.attachCertificate(petID: petID, photo: .data(PhotoRenderer.compressed(data)))
                     }
                     pickerItem = nil
+                }
+            }
+            .onChange(of: registrationPickerItem) { _, item in
+                guard let item else { return }
+                Task {
+                    if let data = try? await item.loadTransferable(type: Data.self), canDocs {
+                        admission.attachRegistrationPhoto(petID: petID, photo: .data(PhotoRenderer.compressed(data)))
+                    }
+                    registrationPickerItem = nil
                 }
             }
             .sheet(isPresented: $showingEvaluation) {
@@ -273,6 +283,9 @@ struct AdmissionDetailContent: View {
             // 3. 동물등록번호
             VStack(alignment: .leading, spacing: 8) {
                 conditionHeader(.animalRegistration, met: record.isMet(.animalRegistration))
+                Text("번호를 입력하거나, 동물등록증 사진을 올려도 돼요. 둘 중 하나면 직원이 확인할 수 있어요.")
+                    .font(AppTheme.Typography.caption)
+                    .foregroundStyle(AppTheme.subText)
                 if canDocs {
                     OpsField(placeholder: "동물등록번호 15자리 숫자", text: $numberText, keyboard: .numberPad)
                     let digits = AdmissionRecord.digits(numberText)
@@ -287,16 +300,37 @@ struct AdmissionDetailContent: View {
                     }
                     .buttonStyle(AnyButtonStyle.soft)
                     .disabled(digits.count != 15)
-                } else {
+                } else if record.hasValidRegistrationNumber {
                     OpsInfoRow(title: String(localized: "번호"), value: record.animalRegistrationNumber)
                 }
+                if let photo = record.registrationPhoto {
+                    PhotoImageView(source: photo)
+                        .frame(height: 140)
+                        .frame(maxWidth: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    if canDocs {
+                        Button("사진 삭제") { admission.removeRegistrationPhoto(petID: petID) }
+                            .font(AppTheme.Typography.caption)
+                            .foregroundStyle(AppTheme.statusRejected)
+                            .frame(minHeight: 44)
+                    }
+                }
+                if canDocs {
+                    PhotosPicker(selection: $registrationPickerItem, matching: .images) {
+                        Label(record.registrationPhoto == nil ? "동물등록증 사진 첨부" : "다른 사진으로 바꾸기", systemImage: "paperclip")
+                            .font(AppTheme.Typography.buttonLabel)
+                            .frame(maxWidth: .infinity, minHeight: 48)
+                            .foregroundStyle(AppTheme.softButtonText)
+                            .background(AppTheme.softButton, in: RoundedRectangle(cornerRadius: 16))
+                    }
+                }
                 if canVerify {
-                    Button(record.registrationVerified ? String(localized: "확인 취소") : String(localized: "등록번호 확인 완료")) {
+                    Button(record.registrationVerified ? String(localized: "확인 취소") : String(localized: "동물등록 확인 완료")) {
                         admission.verifyRegistration(petID: petID, verified: !record.registrationVerified, staffID: user.id)
                     }
                     .buttonStyle(record.registrationVerified ? AnyButtonStyle.soft : AnyButtonStyle.gradient)
-                    .disabled(!record.hasValidRegistrationNumber)
-                } else if record.hasValidRegistrationNumber {
+                    .disabled(!record.hasRegistrationProof)
+                } else if record.hasRegistrationProof {
                     Text(record.registrationVerified ? String(localized: "직원이 확인했어요") : String(localized: "직원이 확인하는 중이에요"))
                         .font(AppTheme.Typography.caption)
                         .foregroundStyle(AppTheme.subText)

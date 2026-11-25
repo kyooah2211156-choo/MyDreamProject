@@ -54,6 +54,21 @@ final class AdmissionStore {
         }
     }
 
+    /// 동물등록증 사진 첨부. 새로 올리면 직원 확인이 다시 필요해요.
+    func attachRegistrationPhoto(petID: String, photo: PhotoSource) {
+        update(petID: petID) {
+            $0.registrationPhoto = photo
+            $0.registrationVerified = false
+        }
+    }
+
+    func removeRegistrationPhoto(petID: String) {
+        update(petID: petID) {
+            $0.registrationPhoto = nil
+            if !$0.hasValidRegistrationNumber { $0.registrationVerified = false }
+        }
+    }
+
     // MARK: 직원 확인
 
     func verifyVaccination(petID: String, verified: Bool, staffID: String) {
@@ -73,7 +88,7 @@ final class AdmissionStore {
 
     func verifyRegistration(petID: String, verified: Bool, staffID: String) {
         update(petID: petID) {
-            guard $0.hasValidRegistrationNumber || !verified else { return }
+            guard $0.hasRegistrationProof || !verified else { return }
             $0.registrationVerified = verified
             $0.verifiedByID = staffID
         }

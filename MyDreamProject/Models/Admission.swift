@@ -68,7 +68,8 @@ struct AdmissionRecord: Identifiable, Codable, Hashable {
     var vaccinationVerified = false                 // 직원이 증명서를 확인함
     var neuterConfirmed = false                     // 직원이 중성화 완료를 확인함
     var animalRegistrationNumber = ""               // 동물등록번호 (숫자 15자리)
-    var registrationVerified = false                // 직원이 번호를 확인함
+    var registrationPhoto: PhotoSource? = nil       // 동물등록증(또는 내장칩 확인서) 사진. 번호 대신 사진으로도 인증할 수 있어요
+    var registrationVerified = false                // 직원이 번호 또는 사진을 확인함
     var verifiedByID: String? = nil                 // 마지막으로 확인한 직원
 
     var evaluation: TrialEvaluation? = nil
@@ -83,11 +84,14 @@ struct AdmissionRecord: Identifiable, Codable, Hashable {
     /// 동물등록번호가 15자리 숫자인지
     var hasValidRegistrationNumber: Bool { Self.digits(animalRegistrationNumber).count == 15 }
 
+    /// 번호(15자리) 또는 사진 중 하나라도 있으면 직원이 확인할 수 있어요.
+    var hasRegistrationProof: Bool { hasValidRegistrationNumber || registrationPhoto != nil }
+
     func isMet(_ condition: AdmissionCondition) -> Bool {
         switch condition {
         case .vaccination: vaccinationCertificate != nil && vaccinationVerified
         case .neutered: neuterConfirmed
-        case .animalRegistration: hasValidRegistrationNumber && registrationVerified
+        case .animalRegistration: hasRegistrationProof && registrationVerified
         }
     }
 

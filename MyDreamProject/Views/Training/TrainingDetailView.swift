@@ -27,6 +27,7 @@ struct TrainingDetailView: View {
                 header
                 if let petID {
                     progressCard(petID)
+                    TrainingPlanCard(training: training, petID: petID)
                     historyCard(petID)
                 }
                 stepsCard

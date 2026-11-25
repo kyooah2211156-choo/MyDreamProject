@@ -31,6 +31,8 @@ struct MyDreamProjectApp: App {
     init() {
         // 앱에 넣은 글꼴 파일을 쓸 수 있게 등록합니다.
         FontRegistrar.registerAll()
+        // 기기 알림이 앱이 켜져 있을 때도 배너로 보이게 합니다.
+        DevicePushService.shared.configure()
     }
 
     var body: some Scene {

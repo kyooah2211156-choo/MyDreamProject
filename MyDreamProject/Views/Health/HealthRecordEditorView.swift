@@ -11,7 +11,9 @@ struct HealthRecordEditorView: View {
     @Environment(NotebookStore.self) private var notebook
     @Environment(HealthRecordStore.self) private var health
 
+    @State private var logPoop: Bool
     @State private var poop: Int
+    @State private var extra: HealthExtraInput
     @State private var logWeight: Bool
     @State private var weightWhole: Int
     @State private var weightTenth: Int
@@ -29,7 +31,9 @@ struct HealthRecordEditorView: View {
         self.day = day
         self.existing = existing
 
+        _logPoop = State(initialValue: existing?.poopRecorded ?? false)
         _poop = State(initialValue: existing?.poopCount ?? 0)
+        _extra = State(initialValue: HealthExtraInput(record: existing))
 
         // 몸무게를 정수 부분과 소수 두 자리로 나눕니다. (예: 4.25 → 4 와 2 와 5)
         let weight = existing?.weightKg ?? suggestedWeight ?? 5.0
@@ -58,6 +62,7 @@ struct HealthRecordEditorView: View {
                     poopCard
                     weightCard
                     mealCard
+                    HealthExtraFields(input: $extra)
 
                     if existing != nil {
                         Button("기록 삭제", role: .destructive) { confirmingDelete = true }
@@ -83,32 +88,36 @@ struct HealthRecordEditorView: View {
 
     private var poopCard: some View {
         card("응가 횟수") {
-            HStack(spacing: 24) {
-                Spacer()
-                Button {
-                    poop = max(0, poop - 1)
-                } label: {
-                    Image(systemName: "minus.circle.fill").font(.system(size: 40))
-                }
-                .accessibilityLabel("응가 횟수 줄이기")
-                .disabled(poop == 0)
+            Toggle("응가 횟수 기록하기", isOn: $logPoop)
+                .tint(AppTheme.buttonShadow)
+            if logPoop {
+                HStack(spacing: 24) {
+                    Spacer()
+                    Button {
+                        poop = max(0, poop - 1)
+                    } label: {
+                        Image(systemName: "minus.circle.fill").font(.system(size: 40))
+                    }
+                    .accessibilityLabel("응가 횟수 줄이기")
+                    .disabled(poop == 0)
 
-                Text("\(poop)")
-                    .font(AppTheme.Typography.counterNumber)
-                    .foregroundStyle(AppTheme.text)
-                    .frame(minWidth: 60)
+                    Text("\(poop)")
+                        .font(AppTheme.Typography.counterNumber)
+                        .foregroundStyle(AppTheme.text)
+                        .frame(minWidth: 60)
 
-                Button {
-                    poop = min(Self.maxPoop, poop + 1)
-                } label: {
-                    Image(systemName: "plus.circle.fill").font(.system(size: 40))
+                    Button {
+                        poop = min(Self.maxPoop, poop + 1)
+                    } label: {
+                        Image(systemName: "plus.circle.fill").font(.system(size: 40))
+                    }
+                    .accessibilityLabel("응가 횟수 늘리기")
+                    .disabled(poop == Self.maxPoop)
+                    Spacer()
                 }
-                .accessibilityLabel("응가 횟수 늘리기")
-                .disabled(poop == Self.maxPoop)
-                Spacer()
+                .foregroundStyle(AppTheme.softButtonText)
+                .buttonStyle(.plain)
             }
-            .foregroundStyle(AppTheme.softButtonText)
-            .buttonStyle(.plain)
         }
     }
 
@@ -189,15 +198,18 @@ struct HealthRecordEditorView: View {
 
     private func save() {
         guard let user = session.currentUser, Permissions.canEditHealthRecords(user) else { return }
-        health.save(HealthRecord(
+        var record = HealthRecord(
             id: existing?.id ?? UUID().uuidString,
             petID: petID,
             date: Calendar.current.startOfDay(for: day),
-            poopCount: poop,
+            poopCount: logPoop ? poop : 0,
             weightKg: logWeight ? Double(weightWhole * 100 + weightTenth * 10 + weightHundredth) / 100 : nil,
             mealGrams: logMeal ? mealGrams : nil,
-            recordedByID: user.id
-        ))
+            recordedByID: user.id,
+            poopRecorded: logPoop
+        )
+        extra.apply(to: &record, keepExisting: false)
+        health.save(record)
         dismiss()
     }
 

@@ -138,7 +138,11 @@ private struct PostRow: View {
                     }
             }
             VStack(alignment: .leading, spacing: 6) {
-                FeedBadge(title: "사진글", color: AppTheme.statusApproved)
+                if post.isPublished {
+                    FeedBadge(title: "사진글", color: AppTheme.statusApproved)
+                } else {
+                    FeedBadge(title: "임시저장", color: AppTheme.statusPending)
+                }
                 Text(post.text)
                     .font(AppTheme.Typography.body)
                     .foregroundStyle(AppTheme.text)

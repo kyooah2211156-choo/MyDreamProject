@@ -14,6 +14,7 @@ struct HealthInputFields: View {
             poopCard
             weightCard
             mealCard
+            HealthExtraFields(input: $state.extra)
         }
     }
 

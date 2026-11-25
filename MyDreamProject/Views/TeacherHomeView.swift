@@ -88,6 +88,10 @@ struct TeacherHomeView: View {
     /// 원장·선생님에게만 보이는 카드 (경고 관리, 건강 기록)
     @ViewBuilder
     private var extraCards: some View {
+        if showsHealthRecords {
+            // 입학·예약·상담·이용권·출석·반려견 상세로 들어가는 메뉴
+            StaffToolsCard()
+        }
         if canManageWarnings {
             WarningEntryCard()
         }

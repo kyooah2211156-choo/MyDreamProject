@@ -258,15 +258,46 @@ struct HealthMetricPills: View {
     let record: HealthRecord
 
     var body: some View {
-        HStack(spacing: 8) {
-            pill("toilet.fill", String(localized: "응가 \(record.poopCount)회"))
+        // 기록하지 않은 항목은 보여주지 않고, 0회·0g은 그대로 보여줘서 '미기록'과 구분해요.
+        let hasAny = hasAnyValue
+        FlowLayout(spacing: 8) {
+            if record.poopRecorded {
+                pill("toilet.fill", String(localized: "응가 \(record.poopCount)회"))
+            }
+            if let status = record.poopStatus {
+                pill("list.bullet.clipboard.fill", String(localized: "응가 \(status.displayName)"))
+            }
+            if let urine = record.urineCount {
+                pill("drop.fill", String(localized: "소변 \(urine)회"))
+            }
             if let weight = record.weightKg {
                 pill("scalemass.fill", "\(weight.formatted(.number.precision(.fractionLength(0...2)))) kg")
             }
             if let meal = record.mealGrams {
                 pill("fork.knife", "\(meal) g")
             }
+            if let appetite = record.appetite {
+                pill("takeoutbag.and.cup.and.straw.fill", String(localized: "식욕 \(appetite.displayName)"))
+            }
+            if let vomited = record.vomited {
+                pill("exclamationmark.bubble.fill", vomited ? String(localized: "구토 있음") : String(localized: "구토 없음"))
+            }
+            if let condition = record.condition {
+                pill("face.smiling.fill", String(localized: "컨디션 \(condition.displayName)"))
+            }
+            if !record.note.isEmpty {
+                pill("note.text", record.note)
+            }
+            if !hasAny {
+                pill("questionmark.circle", String(localized: "기록된 항목 없음"))
+            }
         }
+    }
+
+    private var hasAnyValue: Bool {
+        record.poopRecorded || record.poopStatus != nil || record.urineCount != nil || record.weightKg != nil
+            || record.mealGrams != nil || record.appetite != nil || record.vomited != nil
+            || record.condition != nil || !record.note.isEmpty
     }
 
     private func pill(_ symbol: String, _ text: String) -> some View {
@@ -298,4 +329,37 @@ struct HealthMetricPills: View {
     .environment(NotebookStore())
     .environment(HealthRecordStore())
     .preferredColorScheme(.dark)
+}
+
+/// 알약이 한 줄에 다 들어가지 않으면 다음 줄로 넘기는 배치
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0, usedWidth: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x > 0 && x + size.width > maxWidth {
+                x = 0; y += rowHeight + spacing; rowHeight = 0
+            }
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+            usedWidth = max(usedWidth, x - spacing)
+        }
+        return CGSize(width: usedWidth, height: y + rowHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX, y = bounds.minY, rowHeight: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x > bounds.minX && x + size.width > bounds.maxX {
+                x = bounds.minX; y += rowHeight + spacing; rowHeight = 0
+            }
+            view.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+    }
 }

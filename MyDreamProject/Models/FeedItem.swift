@@ -33,3 +33,9 @@ struct AlbumPhoto: Identifiable, Hashable {
     let postID: String
     var id: String { photo.id }
 }
+
+/// 사진첩에서 강아지별·날짜별로 좁혀 볼 때 쓰는 조건 (둘 다 비어 있으면 전체)
+struct AlbumFilter: Hashable {
+    var petID: String? = nil
+    var day: Date? = nil
+}

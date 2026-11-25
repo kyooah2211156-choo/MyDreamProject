@@ -13,6 +13,8 @@ struct PostEditorView: View {
     @Environment(SessionStore.self) private var session
     @Environment(NotebookStore.self) private var store
     @Environment(HealthRecordStore.self) private var health
+    /// 공개할 때 보호자에게 앱 안 알림을 보냅니다. (미리보기처럼 없는 곳에서는 알림 없이 저장만 해요)
+    @Environment(NotificationStore.self) private var notifications: NotificationStore?
     /// 오늘 등원 정보 (원장·선생님 화면에서만 있어요)
     @Environment(TeacherHomeViewModel.self) private var attendance: TeacherHomeViewModel?
 
@@ -26,6 +28,7 @@ struct PostEditorView: View {
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var isLoadingPhotos = false
     @State private var errorMessage: String?
+    @State private var confirmingPublish = false
 
     private static let maxPhotos = 10
 
@@ -67,6 +70,12 @@ struct PostEditorView: View {
     private var isLegacyGroupPost: Bool { isEditing && originalTags.count > 1 }
     private var needsPetChoice: Bool { !isEditing && fixedPetID == nil }
 
+    /// 아직 공개 전인 글인지 (새 글이거나 임시저장한 글). 공개된 글을 고칠 때는 false예요.
+    private var isUnpublished: Bool {
+        if case .edit(let post) = mode { return !post.isPublished }
+        return true
+    }
+
     private var canSave: Bool {
         guard !isLoadingPhotos, !(photos.isEmpty && trimmedText.isEmpty) else { return false }
         return isLegacyGroupPost || petID != nil
@@ -104,6 +113,19 @@ struct PostEditorView: View {
                             .font(AppTheme.Typography.caption)
                             .foregroundStyle(AppTheme.statusRejected)
                     }
+
+                    if isUnpublished {
+                        Button {
+                            save(publish: false)
+                        } label: {
+                            Label("임시저장", systemImage: "tray.and.arrow.down.fill")
+                        }
+                        .buttonStyle(SoftButtonStyle())
+                        .disabled(!canSave)
+                        Text("임시저장한 글은 나와 원장님만 볼 수 있고, 공개하기 전까지 보호자에게 보이지 않아요.")
+                            .font(AppTheme.Typography.captionRegular)
+                            .foregroundStyle(AppTheme.subText)
+                    }
                 }
                 .padding(AppTheme.Spacing.large)
             }
@@ -113,8 +135,18 @@ struct PostEditorView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("취소") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("저장", action: save).disabled(!canSave)
+                    if isUnpublished {
+                        Button("공개") { confirmingPublish = true }.disabled(!canSave)
+                    } else {
+                        Button("저장") { save(publish: true) }.disabled(!canSave)
+                    }
                 }
+            }
+            .confirmationDialog("공개할까요?", isPresented: $confirmingPublish, titleVisibility: .visible) {
+                Button("확인했어요, 공개하기") { save(publish: true) }
+                Button("더 수정할게요", role: .cancel) {}
+            } message: {
+                Text("내용·사진·건강 기록을 다시 확인해 주세요. 공개하면 \(petName ?? "")의 보호자에게 알림이 가요.")
             }
             .task(id: petID) { loadHealthInput() }
             .onChange(of: pickerItems) { _, items in
@@ -250,7 +282,8 @@ struct PostEditorView: View {
         pickerItems = []
     }
 
-    private func save() {
+    /// publish가 false면 임시저장, true면 공개(또는 이미 공개된 글 수정)예요.
+    private func save(publish: Bool) {
         guard let user = session.currentUser else { return }
         switch mode {
         case .create:
@@ -260,10 +293,12 @@ struct PostEditorView: View {
             }
             guard let petID else { return }
             let now = Date.now
-            store.save(post: Post(id: UUID().uuidString, authorID: user.id, text: trimmedText,
-                                  photos: photos, taggedPetIDs: [petID], date: now,
-                                  category: category))
+            let post = Post(id: UUID().uuidString, authorID: user.id, text: trimmedText,
+                            photos: photos, taggedPetIDs: [petID], date: now,
+                            category: category, isPublished: publish)
+            store.save(post: post)
             saveHealth(petID: petID, day: now, user: user)
+            if publish { notifyPublished(post) }
         case .edit(let original):
             guard Permissions.canEdit(original, by: user) else {
                 errorMessage = String(localized: "이 글을 수정할 권한이 없어요.")
@@ -272,12 +307,40 @@ struct PostEditorView: View {
             var post = original
             post.text = trimmedText
             post.photos = photos
+            let isNewlyPublished = publish && !original.isPublished
+            if isNewlyPublished {
+                post.isPublished = true
+                post.date = .now        // 공개한 시각이 알림장에 보이는 시각이에요.
+            }
             store.save(post: post)
             if let petID, !isLegacyGroupPost {
-                saveHealth(petID: petID, day: original.date, user: user)
+                saveHealth(petID: petID, day: post.date, user: user)
             }
+            if isNewlyPublished { notifyPublished(post) }
         }
         dismiss()
+    }
+
+    /// 알림장이 공개되면 반려견의 보호자에게 알려요. 사진·영상이 있으면 따로 한 번 더 알려요.
+    private func notifyPublished(_ post: Post) {
+        guard let notifications else { return }
+        let owners = Set(post.taggedPetIDs.compactMap { id in store.pets.first { $0.id == id }?.ownerID })
+        for ownerID in owners {
+            let names = post.taggedPetIDs
+                .filter { id in store.pets.first { $0.id == id }?.ownerID == ownerID }
+                .compactMap { id in store.pets.first { $0.id == id }?.name }
+                .joined(separator: ", ")
+            notifications.send(to: ownerID, title: String(localized: "알림장이 공개됐어요"),
+                               content: String(localized: "\(names)의 새 알림장이 올라왔어요."))
+            if !post.photos.isEmpty {
+                let hasVideo = post.category == .video || post.photos.contains { if case .video = $0.source { true } else { false } }
+                let content = hasVideo
+                    ? String(localized: "\(names)의 새 영상이 \(post.photos.count)개 올라왔어요.")
+                    : String(localized: "\(names)의 새 사진이 \(post.photos.count)장 올라왔어요.")
+                notifications.send(to: ownerID, title: hasVideo ? String(localized: "영상이 공개됐어요") : String(localized: "사진이 공개됐어요"),
+                                   content: content)
+            }
+        }
     }
 
     /// 켜 둔 건강 기록(응가·몸무게·식사량)을 홈의 건강 기록에도 함께 저장합니다.

@@ -17,6 +17,9 @@ struct ScheduleView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(SessionStore.self) private var session
     @Environment(ScheduleStore.self) private var store
+    /// 내 예약(보호자) 또는 전체 예약(원장·선생님)을 달력에 함께 보여줘요. 없는 곳(미리보기 등)에서는 숨겨요.
+    @Environment(ReservationStore.self) private var reservations: ReservationStore?
+    @Environment(NotebookStore.self) private var notebook: NotebookStore?
 
     @State private var displayedMonth = Calendar.current.dateInterval(of: .month, for: .now)?.start ?? .now
     @State private var selectedDate = Calendar.current.startOfDay(for: .now)
@@ -158,6 +161,9 @@ struct ScheduleView: View {
                     ForEach(kinds.prefix(3), id: \.self) { kind in
                         Circle().fill(kind.color).frame(width: 6, height: 6)
                     }
+                    if hasReservation(on: day) {
+                        Image(systemName: "star.fill").font(.system(size: 6)).foregroundStyle(AppTheme.softButtonText)
+                    }
                 }
                 .frame(height: 6)
             }
@@ -177,7 +183,21 @@ struct ScheduleView: View {
                         .foregroundStyle(AppTheme.subText)
                 }
             }
+            if reservations != nil {
+                HStack(spacing: 4) {
+                    Image(systemName: "star.fill").font(.system(size: 8)).foregroundStyle(AppTheme.softButtonText)
+                    Text("예약")
+                        .font(AppTheme.Typography.caption)
+                        .foregroundStyle(AppTheme.subText)
+                }
+            }
         }
+    }
+
+    /// 그날 내가 볼 수 있는 (취소되지 않은) 예약이 있는지
+    private func hasReservation(on day: Date) -> Bool {
+        guard let user = session.currentUser, let reservations else { return false }
+        return !reservations.reservations(on: day, for: user).isEmpty
     }
 
     // MARK: 선택한 날의 일정
@@ -188,7 +208,8 @@ struct ScheduleView: View {
             Text(selectedDate.formatted(.dateTime.month().day().weekday(.wide)))
                 .font(AppTheme.Typography.headline)
                 .foregroundStyle(AppTheme.text)
-            if events.isEmpty {
+            let dayReservations = reservations?.reservations(on: selectedDate, for: user) ?? []
+            if events.isEmpty && dayReservations.isEmpty {
                 Text("이 날은 등록된 일정이 없어요")
                     .font(AppTheme.Typography.body)
                     .foregroundStyle(AppTheme.subText)
@@ -198,8 +219,42 @@ struct ScheduleView: View {
             ForEach(events) { event in
                 eventRow(event, canEdit: Permissions.canEditSchedule(user))
             }
+            ForEach(dayReservations) { reservation in
+                reservationCard(reservation, user: user)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// 달력에 함께 보이는 예약 (시간표 일정과 구분되도록 별 표시)
+    private func reservationCard(_ reservation: Reservation, user: User) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            RoundedRectangle(cornerRadius: 3).fill(AppTheme.softButtonText).frame(width: 5)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(reservation.start.formatted(date: .omitted, time: .shortened))
+                    .font(AppTheme.Typography.caption)
+                    .foregroundStyle(AppTheme.subText)
+                HStack(spacing: 8) {
+                    Label(reservation.kind.displayName, systemImage: reservation.kind.symbol)
+                        .font(AppTheme.Typography.headline)
+                        .foregroundStyle(AppTheme.text)
+                    ReservationStatusPill(status: reservation.status)
+                }
+                Text("\(notebook?.petName(reservation.petID) ?? "")\(user.role == .parent ? "" : " · " + (notebook?.authorName(reservation.parentID) ?? ""))")
+                    .font(AppTheme.Typography.body)
+                    .foregroundStyle(AppTheme.subText)
+                if !reservation.address.isEmpty {
+                    Label(reservation.address, systemImage: "mappin.and.ellipse")
+                        .font(AppTheme.Typography.caption)
+                        .foregroundStyle(AppTheme.subText)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .background(AppTheme.card, in: RoundedRectangle(cornerRadius: AppTheme.Radius.card))
+        .shadow(color: AppTheme.cardShadow, radius: 8, y: 4)
+        .accessibilityElement(children: .combine)
     }
 
     @ViewBuilder

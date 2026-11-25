@@ -19,7 +19,11 @@ final class AppSettingsStore {
     var fontStyle: AppFontStyle { settings.fontStyle }
 
     /// 기본값(시스템 설정)과 같은지
-    var isDefault: Bool { settings == AppSettings() }
+    var isDefault: Bool {
+        var defaults = AppSettings()
+        defaults.pushEnabled = settings.pushEnabled
+        return settings == defaults
+    }
 
     func setAppearance(_ appearance: AppearanceMode) {
         settings.appearance = appearance
@@ -37,8 +41,33 @@ final class AppSettingsStore {
         service.save(settings)
     }
 
+    var pushEnabled: Bool { settings.pushEnabled }
+
+    /// 기기 알림 켜기/끄기. 켤 때 iOS 권한을 요청하고, 거절되면 꺼진 채로 두고 false를 돌려줘요.
+    @discardableResult
+    func setPushEnabled(_ enabled: Bool) async -> Bool {
+        var result = enabled
+        if enabled {
+            result = await DevicePushService.shared.requestAuthorization()
+        } else {
+            DevicePushService.shared.clearAll()
+        }
+        settings.pushEnabled = result
+        service.save(settings)
+        return result == enabled
+    }
+
+    /// iOS 설정 앱에서 알림을 꺼 버렸다면 앱 스위치도 함께 끕니다.
+    func syncPushWithSystem() async {
+        guard settings.pushEnabled, !(await DevicePushService.shared.isAuthorized()) else { return }
+        settings.pushEnabled = false
+        service.save(settings)
+    }
+
     func reset() {
+        let push = settings.pushEnabled     // 화면 설정 되돌리기가 알림 설정을 끄지는 않아요.
         settings = AppSettings()
+        settings.pushEnabled = push
         AppFontSelection.shared.style = .system
         service.save(settings)
     }

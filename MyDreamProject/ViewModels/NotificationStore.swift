@@ -6,6 +6,8 @@ import Observation
 final class NotificationStore {
     private let service: NotificationService
     private(set) var items: [AppNotification] = []
+    /// 알림이 새로 생길 때 불러요. 기기 알림(배너)을 함께 띄우는 데 씁니다.
+    @ObservationIgnored var onSend: ((AppNotification) -> Void)?
 
     init(service: NotificationService = FakeNotificationService()) {
         self.service = service
@@ -27,9 +29,11 @@ final class NotificationStore {
 
     /// 알림 보내기 (지금은 앱 안 알림만)
     func send(to recipientID: String, title: String, content: String) {
-        service.add(AppNotification(id: UUID().uuidString, recipientID: recipientID,
-                                    title: title, content: content, isRead: false, date: .now))
+        let notification = AppNotification(id: UUID().uuidString, recipientID: recipientID,
+                                           title: title, content: content, isRead: false, date: .now)
+        service.add(notification)
         reload()
+        onSend?(notification)
     }
 
     func markRead(_ id: String) {

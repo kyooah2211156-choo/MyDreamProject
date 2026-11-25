@@ -4,11 +4,13 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppSettingsStore.self) private var settings
+    @State private var pushMessage: String?
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppTheme.Spacing.large) {
+                    pushCard
                     appearanceCard
                     textSizeCard
                     fontCard
@@ -30,6 +32,48 @@ struct SettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("완료") { dismiss() } }
             }
+        }
+    }
+
+    // MARK: 기기 알림 (껐다 켜기)
+
+    private var pushCard: some View {
+        card("기기 알림") {
+            Toggle(isOn: Binding(
+                get: { settings.pushEnabled },
+                set: { newValue in
+                    Task {
+                        let ok = await settings.setPushEnabled(newValue)
+                        pushMessage = ok ? nil : String(localized: "알림이 허용되지 않았어요. 기기의 설정 앱에서 이 앱의 알림을 허용해 주세요.")
+                    }
+                }
+            )) {
+                Text("알림 받기")
+                    .font(AppTheme.Typography.body)
+                    .foregroundStyle(AppTheme.text)
+            }
+            .tint(AppTheme.buttonShadow)
+            .frame(minHeight: 48)
+            Text("등원·하원, 알림장 공개, 예약, 경고 같은 알림이 올 때 기기 화면에도 알려 줘요.")
+                .font(AppTheme.Typography.captionRegular)
+                .foregroundStyle(AppTheme.subText)
+            if let pushMessage {
+                Text(pushMessage)
+                    .font(AppTheme.Typography.caption)
+                    .foregroundStyle(AppTheme.statusRejected)
+            }
+            if settings.pushEnabled {
+                Button {
+                    DevicePushService.shared.deliver(title: String(localized: "테스트 알림"),
+                                                     body: String(localized: "기기 알림이 잘 오고 있어요 🐾"))
+                } label: {
+                    Label("테스트 알림 보내기", systemImage: "bell.badge")
+                }
+                .buttonStyle(SoftButtonStyle())
+            }
+            Text("지금은 테스트 단계라 서버 푸시 대신 이 기기에서 만든 알림이에요.")
+                .font(AppTheme.Typography.captionRegular)
+                .foregroundStyle(AppTheme.subText)
         }
     }
 

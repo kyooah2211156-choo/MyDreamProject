@@ -10,13 +10,16 @@ struct HealthInputState: Equatable {
     var weightHundredth = 0
     var logMeal = false
     var mealGrams = 100
+    /// 소변·응가 상태·식욕·구토·컨디션·특이사항
+    var extra = HealthExtraInput()
 
     init() {}
 
     /// 이미 기록이 있으면 그 값으로 채우고, 몸무게는 없으면 최근 몸무게(suggestedWeight)를 시작값으로 씁니다.
     init(record: HealthRecord?, suggestedWeight: Double?) {
         if let record {
-            logPoop = true
+            extra = HealthExtraInput(record: record)
+            logPoop = record.poopRecorded
             poop = record.poopCount
             if let weight = record.weightKg { logWeight = true; setWeight(weight) }
             if let meal = record.mealGrams { logMeal = true; mealGrams = min((meal / 5) * 5, 1000) }
@@ -38,20 +41,32 @@ struct HealthInputState: Equatable {
     }
 
     /// 하나라도 기록하겠다고 켜 두었는지
-    var hasAnyInput: Bool { logPoop || logWeight || logMeal }
+    var hasAnyInput: Bool { logPoop || logWeight || logMeal || extra.hasAnyInput }
 
     /// 입력한 값을 건강 기록으로 만듭니다. 켜지 않은 항목은 기존 기록 값을 그대로 둡니다.
     /// 아무것도 켜지 않았으면 nil (기록을 만들지 않아요).
     func makeRecord(existing: HealthRecord?, petID: String, day: Date, recordedByID: String) -> HealthRecord? {
         guard hasAnyInput else { return nil }
-        return HealthRecord(
+        var record = HealthRecord(
             id: existing?.id ?? UUID().uuidString,
             petID: petID,
             date: Calendar.current.startOfDay(for: day),
             poopCount: logPoop ? poop : (existing?.poopCount ?? 0),
             weightKg: logWeight ? weightKg : existing?.weightKg,
             mealGrams: logMeal ? mealGrams : existing?.mealGrams,
-            recordedByID: recordedByID
+            recordedByID: recordedByID,
+            poopRecorded: logPoop || (existing?.poopRecorded ?? false)
         )
+        // 새 항목은 기존 기록의 값을 먼저 가져온 뒤, 켜 둔 항목만 덮어씁니다.
+        if let existing {
+            record.urineCount = existing.urineCount
+            record.poopStatus = existing.poopStatus
+            record.appetite = existing.appetite
+            record.vomited = existing.vomited
+            record.condition = existing.condition
+            record.note = existing.note
+        }
+        extra.apply(to: &record, keepExisting: true)
+        return record
     }
 }

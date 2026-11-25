@@ -9,4 +9,5 @@ struct Post: Identifiable, Codable, Hashable {
     var taggedPetIDs: [String]
     var date: Date
     var category: PostCategory = .freeTime   // 프로그램 / 자유시간 / 영상
+    var isPublished: Bool = true            // false면 임시저장 (작성한 직원과 원장만 보이고, 사진첩에도 안 나와요)
 }

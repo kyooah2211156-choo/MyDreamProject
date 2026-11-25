@@ -173,6 +173,7 @@ struct ParentHomeView: View {
     @ViewBuilder
     private func detail(for pet: Pet, user: User) -> some View {
         PetProfileCard(pet: pet)
+        ParentToolsCard(pet: pet)
         switch pet.status {
         case .approved:
             approvedContent(pet, user: user)

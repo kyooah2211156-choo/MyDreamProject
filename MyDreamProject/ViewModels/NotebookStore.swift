@@ -71,10 +71,23 @@ final class NotebookStore {
     }
 
     /// 사진첩에 보일 사진들 (분류: 프로그램 / 자유시간 / 영상, nil이면 전체)
-    func albumPhotos(for user: User, category: PostCategory?) -> [AlbumPhoto] {
-        visiblePosts(for: user)
+    /// 임시저장 글의 사진은 공개 전이라 사진첩에 나오지 않아요.
+    func albumPhotos(for user: User, category: PostCategory?, filter: AlbumFilter = AlbumFilter()) -> [AlbumPhoto] {
+        let calendar = Calendar.current
+        return visiblePosts(for: user)
+            .filter { $0.isPublished }
             .filter { post in category.map { post.category == $0 } ?? true }
+            .filter { post in filter.petID.map { post.taggedPetIDs.contains($0) } ?? true }
+            .filter { post in filter.day.map { calendar.isDate(post.date, inSameDayAs: $0) } ?? true }
             .flatMap { post in post.photos.map { AlbumPhoto(photo: $0, postID: post.id) } }
+    }
+
+    /// 반려견 프로필 사진 바꾸기 (화면에서 권한을 먼저 확인한 뒤 호출)
+    func updateProfilePhoto(petID: String, photo: PhotoSource?) {
+        guard var pet = pets.first(where: { $0.id == petID }) else { return }
+        pet.profilePhoto = photo
+        service.update(pet: pet)
+        reload()
     }
 
     // MARK: 가입

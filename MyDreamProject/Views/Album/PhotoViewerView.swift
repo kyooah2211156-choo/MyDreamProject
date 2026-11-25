@@ -3,6 +3,7 @@ import SwiftUI
 /// 사진 크게 보기: 좌우로 넘기기, 저장·공유, (권한이 있으면) 설명·태그 수정과 사진 삭제
 struct PhotoViewerView: View {
     let category: PostCategory?
+    var filter = AlbumFilter()
     @State private var selection: String
     @Environment(\.dismiss) private var dismiss
     @Environment(SessionStore.self) private var session
@@ -12,15 +13,16 @@ struct PhotoViewerView: View {
     @State private var resultMessage: String?
     @State private var showingComments = false
 
-    init(startID: String, category: PostCategory?) {
+    init(startID: String, category: PostCategory?, filter: AlbumFilter = AlbumFilter()) {
         _selection = State(initialValue: startID)
         self.category = category
+        self.filter = filter
     }
 
     /// 지금 보고 있는 목록 (글이 바뀌면 함께 바뀜)
     private var items: [AlbumPhoto] {
         guard let user = session.currentUser else { return [] }
-        return store.albumPhotos(for: user, category: category)
+        return store.albumPhotos(for: user, category: category, filter: filter)
     }
 
     private var current: AlbumPhoto? { items.first { $0.id == selection } }

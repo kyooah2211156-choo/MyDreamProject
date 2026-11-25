@@ -6,10 +6,13 @@ struct TrainingListView: View {
     @Environment(SessionStore.self) private var session
     @Environment(NotebookStore.self) private var notebook
     @Environment(TrainingProgressStore.self) private var progress
+    /// 반려견별로 추가한 훈련 항목 (없는 곳에서는 기본 훈련만 보여요)
+    @Environment(PetDetailStore.self) private var petDetails: PetDetailStore?
     /// 오늘 등원 정보 (원장·선생님 화면에서만 있어요)
     @Environment(TeacherHomeViewModel.self) private var attendance: TeacherHomeViewModel?
     @State private var trainings: [Training]
     @State private var selectedPetID: String?
+    @State private var addingTraining = false
 
     init(service: TrainingService = FakeTrainingService()) {
         _trainings = State(initialValue: service.loadTrainings())
@@ -29,7 +32,7 @@ struct TrainingListView: View {
         return ScrollView {
             LazyVStack(spacing: AppTheme.Spacing.medium) {
                 petChips(pets, selected: selected)
-                ForEach(trainings) { training in
+                ForEach(trainings + customTrainings(for: selected?.id)) { training in
                     NavigationLink {
                         TrainingDetailView(training: training, petID: selected?.id)
                     } label: {
@@ -42,6 +45,25 @@ struct TrainingListView: View {
         }
         .background(AppTheme.background.ignoresSafeArea())
         .navigationTitle("훈련")
+        .toolbar {
+            // 원장·선생님은 고른 반려견에게만 보이는 훈련 항목을 추가할 수 있어요.
+            ToolbarItem(placement: .topBarTrailing) {
+                if Permissions.canManageTrainingPlan(user), selected != nil, petDetails != nil {
+                    Button { addingTraining = true } label: {
+                        Image(systemName: "plus").frame(width: 44, height: 44)
+                    }
+                    .accessibilityLabel("훈련 항목 추가")
+                }
+            }
+        }
+        .sheet(isPresented: $addingTraining) {
+            if let selected { CustomTrainingEditorView(petID: selected.id, existing: nil) }
+        }
+    }
+
+    private func customTrainings(for petID: String?) -> [Training] {
+        guard let petID, let petDetails else { return [] }
+        return petDetails.customTrainings(petID: petID).map(\.asTraining)
     }
 
     // MARK: 반려견 고르기

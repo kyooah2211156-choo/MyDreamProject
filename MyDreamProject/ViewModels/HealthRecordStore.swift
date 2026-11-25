@@ -34,9 +34,8 @@ final class HealthRecordStore {
     func save(_ record: HealthRecord) {
         var toSave = record
         if let existing = self.record(petID: record.petID, on: record.date), existing.id != record.id {
-            toSave = HealthRecord(id: existing.id, petID: record.petID, date: record.date,
-                                  poopCount: record.poopCount, weightKg: record.weightKg,
-                                  mealGrams: record.mealGrams, recordedByID: record.recordedByID)
+            toSave = record
+            toSave.id = existing.id
         }
         service.save(toSave)
         reload()
